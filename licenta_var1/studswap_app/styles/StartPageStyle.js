@@ -1,46 +1,70 @@
 import { StyleSheet } from 'react-native';
-import { colors } from './RegisterScreenStyle'; 
 
-export const styles = StyleSheet.create({
+export const getStartStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background, // <-- Powered by Context!
     padding: 24,
+    justifyContent: 'space-between', 
+  },
+  themeToggle: {
+    position: 'absolute',
+    top: 60, // Pushes it down past the phone's status bar
+    right: 24,
+    zIndex: 10,
+    padding: 8,
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.inputBorder,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,    
+  },
+  centerContent: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
-  },
-  logoContainer: {
-    marginBottom: 32,
   },
   title: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: '900',
     color: colors.textDark,
-    marginBottom: 48,
-    letterSpacing: -0.5,
+    marginTop: 24,
+    letterSpacing: -1,
+    textAlign: 'center'
+  },
+  buttonContainer: {
+    marginBottom: 40,
+    gap: 16, 
   },
   buttonOutline: {
-    width: '100%',
-    marginBottom: 16,
-    borderColor: colors.accent, // Sage Green outline
-    borderWidth: 2,
+    borderWidth: 1,
+    borderColor: colors.textDark,
     borderRadius: 30,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  buttonTextDark: {
+    color: colors.textDark,
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   buttonSolid: {
-    width: '100%',
-    backgroundColor: colors.accent, // Sage Green solid
+    backgroundColor: colors.accent,
     borderRadius: 30,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
   },
-  buttonLabelOutline: {
+  buttonTextLight: {
+    color: colors.surface, 
     fontSize: 16,
     fontWeight: 'bold',
-    color: colors.accent,
-    paddingVertical: 6,
-  },
-  buttonLabelSolid: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: colors.surface,
-    paddingVertical: 6,
   }
 });

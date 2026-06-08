@@ -1,32 +1,86 @@
 import React from 'react';
-import { View, TouchableOpacity } from 'react-native';
-import { styles } from '../styles/StartPageStyle';
-import { colors } from '../styles/RegisterScreenStyle';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+// import { colors } from '../styles/RegisterScreenStyle';
+// import { styles } from '../styles/StartPageStyle'; 
+
+import { useTheme } from '../context/ThemeContext';
+import { getStartStyles } from '../styles/StartPageStyle';
 
 export default function StartScreen({ navigation }) {
+  const { colors, isDarkMode, updateTheme } = useTheme();
+  const styles = getStartStyles(colors);
+
   return (
     <View style={styles.container}>
-      <View style={styles.logoContainer}>
-        <View style={{ width: 120, height: 120, borderRadius: 60, backgroundColor: colors.accent }} />
+      
+      <TouchableOpacity 
+        style={styles.themeToggle}
+        onPress={() => updateTheme(isDarkMode ? 'light' : 'dark')}
+        activeOpacity={0.7}
+      >
+        <MaterialCommunityIcons 
+          name={isDarkMode ? "weather-sunny" : "weather-night"} 
+          size={24} 
+          color={colors.textDark} 
+        />
+      </TouchableOpacity>
+
+      <View style={styles.centerContent}>
+        <MaterialCommunityIcons name="school-outline" size={100} color={colors.textDark} />
+        <Text style={styles.title}>Welcome to StudSwap!</Text>
       </View>
-      <View style={{ width: 220, height: 36, marginBottom: 48, borderRadius: 18, backgroundColor: colors.textDark, opacity: 0.12 }} />
 
-      <TouchableOpacity
-        style={styles.buttonOutline}
-        onPress={() => navigation.navigate('Login')}
-        activeOpacity={0.8}
-      >
-        <View style={{ width: 64, height: 16, borderRadius: 8, backgroundColor: colors.accent }} />
-      </TouchableOpacity>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity 
+          style={styles.buttonOutline} 
+          onPress={() => navigation.navigate('Login')}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.buttonTextDark, { color: colors.textDark }]} numberOfLines={1} >Log In</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.buttonSolid}
-        onPress={() => navigation.navigate('Register')}
-        activeOpacity={0.8}
-      >
-        <View style={{ width: 74, height: 16, borderRadius: 8, backgroundColor: colors.surface }} />
-      </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.buttonSolid} 
+          onPress={() => navigation.navigate('Register')}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.buttonTextLight, { color: '#FFF' }]} numberOfLines={1}>Sign Up</Text>
+        </TouchableOpacity>
+      </View>
 
     </View>
   );
 }
+
+// export default function StartScreen({ navigation }) {
+//   return (
+//     <View style={styles.container}>
+      
+//       <View style={styles.centerContent}>
+//         <MaterialCommunityIcons name="school-outline" size={100} color={colors.textDark} />
+//         <Text style={styles.title}>Welcome to StudSwap!</Text>
+//       </View>
+
+//       <View style={styles.buttonContainer}>
+//         <TouchableOpacity 
+//           style={styles.buttonOutline} 
+//           onPress={() => navigation.navigate('Login')}
+//           activeOpacity={0.7}
+//         >
+//           <Text style={styles.buttonTextDark}>Log In</Text>
+//         </TouchableOpacity>
+
+//         <TouchableOpacity 
+//           style={styles.buttonSolid} 
+//           onPress={() => navigation.navigate('Register')}
+//           activeOpacity={0.7}
+//         >
+//           <Text style={styles.buttonTextDark}>Sign Up</Text>
+//         </TouchableOpacity>
+//       </View>
+
+//     </View>
+//   );
+// }

@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, FlatList, TouchableOpacity, Alert } from 'react-native';
-import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-import { styles } from '../styles/HomeScreenStyle';
-import { colors } from '../styles/RegisterScreenStyle';
+import { View, Text, FlatList, TouchableOpacity } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import NavBar from '../components/NavBar';
+import { useTheme } from '../context/ThemeContext'; 
+import { getHomeStyles } from '../styles/HomeScreenStyle';
 
 export default function SavedListingsScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = getHomeStyles(colors);
+
   const [savedListings, setSavedListings] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // TODO: Fetch saved listings from Firebase
-    // For now, show empty state
     setLoading(false);
   }, []);
 
@@ -23,18 +25,18 @@ export default function SavedListingsScreen({ navigation }) {
         </View>
         <View style={styles.headerTextContainer}>
           <Text style={{ fontWeight: 'bold', color: colors.textDark }}>{item.title}</Text>
-          <Text style={{ fontSize: 12, color: '#888' }}>{item.category}</Text>
+          <Text style={{ fontSize: 12, color: colors.muted }}>{item.category}</Text>
         </View>
         <TouchableOpacity>
-          <MaterialCommunityIcons name="heart" size={24} color="#FF6B6B" />
+          <MaterialCommunityIcons name="heart" size={24} color={colors.accent} />
         </TouchableOpacity>
       </View>
 
       <View style={styles.imagePlaceholder}>
         {item.image ? (
-          <Text style={{ color: '#888' }}>Image</Text>
+          <Text style={{ color: colors.muted }}>Image</Text>
         ) : (
-          <MaterialCommunityIcons name="image-outline" size={80} color="#BDBDBD" />
+          <MaterialCommunityIcons name="image-outline" size={80} color={colors.muted} />
         )}
       </View>
 
@@ -43,12 +45,12 @@ export default function SavedListingsScreen({ navigation }) {
           <Text style={{ fontWeight: 'bold', fontSize: 16, color: colors.textDark }}>
             ${item.price}
           </Text>
-          <Text style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+          <Text style={{ fontSize: 12, color: colors.muted, marginTop: 4 }}>
             {item.location}
           </Text>
         </View>
         <TouchableOpacity style={{ padding: 8 }}>
-          <MaterialCommunityIcons name="heart-outline" size={24} color="#FF6B6B" />
+          <MaterialCommunityIcons name="heart" size={24} color={colors.accent} />
         </TouchableOpacity>
       </View>
     </View>
@@ -64,8 +66,8 @@ export default function SavedListingsScreen({ navigation }) {
 
       {savedListings.length === 0 ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <MaterialCommunityIcons name="heart-outline" size={80} color="#CCC" />
-          <Text style={{ marginTop: 16, color: '#888', fontSize: 16 }}>
+          <MaterialCommunityIcons name="heart-outline" size={80} color={colors.inputBorder} />
+          <Text style={{ marginTop: 16, color: colors.muted, fontSize: 16 }}>
             No saved listings yet
           </Text>
         </View>
@@ -79,7 +81,8 @@ export default function SavedListingsScreen({ navigation }) {
         />
       )}
 
-      <NavBar navigation={navigation} activeScreen="Saved" />
+      {/* Corrected to match exact spelling in NavBar.js */}
+      <NavBar navigation={navigation} activeScreen="SavedListings" /> 
     </View>
   );
 }

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { styles } from '../styles/HomeScreenStyle';
-import { colors } from '../styles/RegisterScreenStyle';
 import NavBar from '../components/NavBar';
+import { useTheme } from '../context/ThemeContext'; 
+import { getHomeStyles } from '../styles/HomeScreenStyle';
 
 export default function ProfileScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = getHomeStyles(colors);
+
   const [userProfile, setUserProfile] = useState({
     name: 'Loading...',
     email: 'Loading...',
@@ -61,7 +63,7 @@ export default function ProfileScreen({ navigation }) {
             <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.textDark, marginTop: 12 }}>
               {userProfile.name}
             </Text>
-            <Text style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+            <Text style={{ fontSize: 12, color: colors.muted, marginTop: 4 }}>
               {userProfile.email}
             </Text>
           </View>
@@ -69,13 +71,13 @@ export default function ProfileScreen({ navigation }) {
 
         <View style={[styles.card, { marginHorizontal: 20, marginTop: 20, padding: 20 }]}>
           <View style={{ marginBottom: 16 }}>
-            <Text style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>City</Text>
+            <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>City</Text>
             <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.textDark }}>
               {userProfile.city}
             </Text>
           </View>
           <View>
-            <Text style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>University</Text>
+            <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>University</Text>
             <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.textDark }}>
               {userProfile.university}
             </Text>
@@ -84,7 +86,7 @@ export default function ProfileScreen({ navigation }) {
 
         <TouchableOpacity
           onPress={handleLogout}
-          style={[styles.card, { marginHorizontal: 20, marginTop: 20, backgroundColor: '#FF6B6B' }]}
+          style={[styles.card, { marginHorizontal: 20, marginTop: 20, backgroundColor: '#E63946' }]} // Soft Red for Logout
         >
           <Text style={{ textAlign: 'center', padding: 16, color: '#FFF', fontWeight: 'bold', fontSize: 16 }}>
             Log Out

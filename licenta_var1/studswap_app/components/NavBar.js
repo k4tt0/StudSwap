@@ -2,12 +2,14 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-import { colors } from '../styles/RegisterScreenStyle'; // Keeps your app colors synced
+import { useTheme } from '../context/ThemeContext';
 
 export default function NavBar({ navigation, activeScreen }) {
   
   // Helper function to figure out icon colors based on the active screen
+  const { colors } = useTheme();
   const getIconColor = (screenName) => activeScreen === screenName ? colors.accent : colors.muted;
+  const styles = getNavBarStyles(colors);
 
   return (
     <>
@@ -63,14 +65,14 @@ export default function NavBar({ navigation, activeScreen }) {
   );
 }
 
-// --- STYLES ARE NOW ATTACHED DIRECTLY TO THE COMPONENT ---
-const styles = StyleSheet.create({
+// 4. Wrap the styles in a function that accepts 'colors'
+const getNavBarStyles = (colors) => StyleSheet.create({
   bottomNavContainer: {
     position: 'absolute',
     bottom: 0,
     width: '100%',
     height: 70,
-    backgroundColor: colors.navbar, // <-- Changed to Forest Green
+    backgroundColor: colors.navbar, // Dynamic!
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     flexDirection: 'row',
@@ -87,7 +89,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     width: 80,
     height: 80,
-    backgroundColor: colors.background, 
+    backgroundColor: colors.background, // Dynamic!
     borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
@@ -96,7 +98,7 @@ const styles = StyleSheet.create({
   fabDiamond: {
     width: 56,
     height: 56,
-    backgroundColor: colors.accent, // <-- Changed to Sage Green
+    backgroundColor: colors.accent, // Dynamic!
     borderRadius: 16,
     transform: [{ rotate: '45deg' }], 
     justifyContent: 'center',

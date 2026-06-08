@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity } from 'react-native';
-import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-import { styles } from '../styles/HomeScreenStyle';
-import { colors } from '../styles/RegisterScreenStyle';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import NavBar from '../components/NavBar';
+import { useTheme } from '../context/ThemeContext'; 
+import { getHomeStyles } from '../styles/HomeScreenStyle';
 
 export default function MessagesScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = getHomeStyles(colors);
+  
   const [messages, setMessages] = useState([]);
 
   const renderItem = ({ item }) => (
@@ -18,11 +21,11 @@ export default function MessagesScreen({ navigation }) {
           <Text style={{ fontWeight: 'bold', color: colors.textDark }}>
             {item.senderName}
           </Text>
-          <Text style={{ fontSize: 12, color: '#888' }} numberOfLines={1}>
+          <Text style={{ fontSize: 12, color: colors.muted }} numberOfLines={1}>
             {item.lastMessage}
           </Text>
         </View>
-        <Text style={{ fontSize: 11, color: '#888' }}>
+        <Text style={{ fontSize: 11, color: colors.muted }}>
           {item.timestamp}
         </Text>
       </View>
@@ -39,8 +42,8 @@ export default function MessagesScreen({ navigation }) {
 
       {messages.length === 0 ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <MaterialCommunityIcons name="chat-outline" size={80} color="#CCC" />
-          <Text style={{ marginTop: 16, color: '#888', fontSize: 16 }}>
+          <MaterialCommunityIcons name="chat-outline" size={80} color={colors.inputBorder} />
+          <Text style={{ marginTop: 16, color: colors.muted, fontSize: 16 }}>
             No messages yet
           </Text>
         </View>
