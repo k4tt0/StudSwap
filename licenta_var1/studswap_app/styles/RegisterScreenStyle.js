@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 export const colors = {
-  background: '#F7F5F0', // A lighter, cleaner Oatmeal
+  background: '#faf6ee', // A lighter, cleaner Oatmeal
   textDark: '#2C362F',   // Deep Forest Charcoal (softer than pure black)
   accent: '#4A8B5B',     // Vibrant Sage/Emerald Green
   surface: '#FFFFFF',    // Pure white for floating cards
