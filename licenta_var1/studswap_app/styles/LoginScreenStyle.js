@@ -117,12 +117,26 @@ export const getLoginStyles = (colors) => StyleSheet.create({
     marginBottom: 8,
     marginLeft: 4,
   },
+  optionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 32,
+    paddingHorizontal: 4,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rememberText: {
+    fontSize: 14,
+    color: colors.textDark,
+    marginLeft: 8,
+  },
   forgotPassword: {
-    textAlign: 'right',
     color: colors.textDark,
     fontSize: 13,
     textDecorationLine: 'underline',
-    marginBottom: 32,
   },
   footerContainer: {
     flexDirection: 'row',

@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const nodemailer = require('nodemailer');
 require('dotenv').config();
 const { db, auth } = require('./firebase');
 
@@ -7,19 +8,29 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// --- Setting up email sender
+const transporter = nodemailer.createTransport({ // Aici am corectat din transpoter în transporter!
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  }
+});
+
+
 // registration 
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { email, password, displayName, city } = req.body;
 
-    // 1. extract domain from the email
+    // extract domain from the email
     const emailDomain = email.split('@')[1];
 
     if (!emailDomain) {
       return res.status(400).json({ error: "Invalid email format." });
     }
 
-    // 2. check if the domain exists in our uni col
+    // check if the domain exists in our uni col
     const uniSnapshot = await db.collection('Universities')
       .where('domain', '==', emailDomain)
       .get();
@@ -28,22 +39,19 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(403).json({ error: "Unauthorized university domain. Use a valid student email." });
     }
 
-    // 3. ver the domain matches the selected city
+    // ver the domain matches the selected city
     const uniData = uniSnapshot.docs[0].data();
     const assignedCity = uniData.city;
 
-    // if (uniData.city !== city) {
-    //   return res.status(403).json({ error: `This email belongs to ${uniData.city}, not ${city}.` });
-    // }
-
-    // 4. create the user in firebase auth
+    // create the user in firebase auth
     const userRecord = await auth.createUser({
       email: email,
       password: password,
       displayName: displayName,
+      emailVerified: false,
     });
 
-    // 5. save the extended user profile in the firestore "Users" collection
+    // save the extended user profile in the firestore "Users" collection
     await db.collection('Users').doc(userRecord.uid).set({
       userId: userRecord.uid,
       email: email,
@@ -52,6 +60,30 @@ app.post('/api/auth/register', async (req, res) => {
       city: assignedCity,
       profileImageUrl: "",
       createdAt: new Date().toISOString()
+    });
+
+    // generating the verifying link - firebase
+    const verificationLink = await auth.generateEmailVerificationLink(email);
+
+    // sending the email
+    await transporter.sendMail({
+      from: `"StudSwap Team" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Verify your student email for StudSwap!", // Am curățat ghilimelele duble de aici
+      html: `
+        <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
+          <h2>Welcome to StudSwap, ${displayName}!</h2>
+          <p>We need to verify that you are a student at <strong>${uniData.name}</strong>.</p>
+          <br>
+          <a href="${verificationLink}" style="padding: 12px 24px; background-color: #4C7D5B; color: white; text-decoration: none; border-radius: 30px; font-weight: bold;">Verify My Email</a>
+          <br><br>
+          <p style="color: #888; font-size: 12px;">If you didn't create an account, you can safely ignore this email.</p>
+        </div>
+      `
+    }).then((info) => {
+      console.log("Email sent successfully: ", info.response);
+    }).catch((error) => {
+      console.error("FAILED TO SEND EMAIL. Google Error: ", error);
     });
 
     res.status(201).json({ 
@@ -63,6 +95,17 @@ app.post('/api/auth/register', async (req, res) => {
 
   } catch (error) {
     console.error("Registration error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// --- status email verification
+
+app.get('/api/auth/check-verification/:userId', async (req, res) => {
+  try {
+    const userRecord = await auth.getUser(req.params.userId);
+    res.json({ emailVerified: userRecord.emailVerified });
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
@@ -111,6 +154,51 @@ app.post('/api/auth/login', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// --- forgot pasword
+app.post('/api/auth/forgot-password', async (req, res) => {
+  const { email } = req.body;
+
+  if (!email){
+    return res.status(400).json({ error: "Email is required."});
+  }
+
+  try {
+    // check if user exists in firebase auth
+    await auth.getUserByEmail(email);
+
+    // generate secure reset link
+    const resetLink = await auth.generatePasswordResetLink(email);
+
+    // send the email
+    await transporter.sendMail({
+      from: `"StudSwap Team" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Reset your StudSwap Password",
+      html: `
+        <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
+          <h2>Password Reset Request</h2>
+          <p>We received a request to reset the password for your StudSwap account.</p>
+          <br>
+          <a href="${resetLink}" style="padding: 12px 24px; background-color: #4C7D5B; color: white; text-decoration: none; border-radius: 30px; font-weight: bold;">Reset Password</a>
+          <br><br>
+          <p style="color: #888; font-size: 12px;">If you didn't request this, you can safely ignore this email. Your password will remain unchanged.</p>
+        </div>
+      `
+    });
+
+    res.status(200).json({ message: "Password reset email sent." });
+
+  } catch (error) {
+    console.error("Forgot Password Error:", error);
+    // If the email isn't in the database, tell the user
+    if (error.code === 'auth/user-not-found') {
+      return res.status(404).json({ error: "No account found with this email." });
+    }
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 // Get user by ID
 app.get('/api/users/:userId', async (req, res) => {

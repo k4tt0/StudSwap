@@ -8,15 +8,39 @@ export const getGlobalStyles = (colors) => StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.background,
   },
-  input: {
+  backButton: {
+    position: 'absolute',
+    top: 60,
+    left: 24,
+    zIndex: 10,
+    width: 40, // Force a specific width
+    height: 40, // Force a specific height
+    alignItems: 'center', // Center the icon
+    justifyContent: 'center', // Center the icon
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.inputBorder,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.inputBorder,
     borderRadius: 12, 
     paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  inputField: {
+    flex: 1,
     paddingVertical: 14,
     fontSize: 16,
-    marginBottom: 16,
     color: colors.textDark,
   },
   buttonSolid: {
@@ -47,10 +71,11 @@ export const getRegisterStyles = (colors) => StyleSheet.create({
   },
   registerTitle: {
     fontSize: 32,
-    fontWeight: 'bold',
+    fontWeight: '800',
     color: colors.textDark,
     textAlign: 'center',
     marginBottom: 40,
+    letterSpacing: -1,
   },
   registerLabel: {
     fontSize: 14,
