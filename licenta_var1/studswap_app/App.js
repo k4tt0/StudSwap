@@ -14,6 +14,7 @@ import HomeScreen from './screens/HomeScreen';
 import SavedListingsScreen from './screens/SavedListingsScreen';
 import MessagesScreen from './screens/MessagesScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import CreateListingScreen from './screens/CreateListingScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -57,6 +58,11 @@ function AppNavigator() {
               <Stack.Screen name="Messages" component={MessagesScreen} />
               <Stack.Screen name="Profile" component={ProfileScreen} />
             </Stack.Group>
+
+            <Stack.Group screenOptions={{ presentation: 'modal', animation: 'slide_from_bottom' }}>
+              <Stack.Screen name="CreateListing" component={CreateListingScreen} />
+            </Stack.Group>
+
           </Stack.Navigator>
         </NavigationContainer>
       </View>

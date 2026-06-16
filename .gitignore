@@ -3,3 +3,4 @@
 .env
 node_modules
 /licenta_var1/studswap_app/firebaseConfig.js
+/licenta_var1/studswap_server/firebaseServiceAccount.json

@@ -3,10 +3,10 @@ import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function NavBar({ navigation, activeScreen }) {
   
-  // Helper function to figure out icon colors based on the active screen
   const { colors } = useTheme();
   const getIconColor = (screenName) => activeScreen === screenName ? colors.accent : colors.muted;
   const styles = getNavBarStyles(colors);
@@ -14,7 +14,7 @@ export default function NavBar({ navigation, activeScreen }) {
   return (
     <>
       <View style={styles.bottomNavContainer}>
-        {/* 1. HOME BUTTON */}
+        {/* home */}
         <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.navIcon}>
           <MaterialCommunityIcons 
             name={activeScreen === 'Home' ? "home-variant" : "home-variant-outline"} 
@@ -23,7 +23,7 @@ export default function NavBar({ navigation, activeScreen }) {
           />
         </TouchableOpacity>
         
-        {/* 2. SAVED ITEMS BUTTON */}
+        {/* saved items */}
         <TouchableOpacity onPress={() => navigation.navigate('SavedListings')} style={[styles.navIcon, { marginRight: 40 }]}>
           <Ionicons 
             name={activeScreen === 'SavedListings' ? "bookmark" : "bookmark-outline"} 
@@ -32,7 +32,7 @@ export default function NavBar({ navigation, activeScreen }) {
           />
         </TouchableOpacity>
 
-        {/* 3. CHAT BUTTON */}
+        {/* chat button */}
         <TouchableOpacity onPress={() => navigation.navigate('Messages')} style={[styles.navIcon, { marginLeft: 40 }]}>
           <Ionicons 
             name={activeScreen === 'Messages' ? "chatbubble" : "chatbubble-outline"} 
@@ -41,7 +41,7 @@ export default function NavBar({ navigation, activeScreen }) {
           />
         </TouchableOpacity>
 
-        {/* 4. PROFILE BUTTON */}
+        {/* profile button */}
         <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.navIcon}>
           <Ionicons 
             name={activeScreen === 'Profile' ? "person" : "person-outline"} 
@@ -51,12 +51,37 @@ export default function NavBar({ navigation, activeScreen }) {
         </TouchableOpacity>
       </View>
 
-      {/* FAB - CENTER DIAMOND BUTTON */}
+      {/* add button */}
       <View style={styles.fabWrapper}>
         <TouchableOpacity 
           style={styles.fabDiamond} 
           activeOpacity={0.8}
-          onPress={() => console.log("Add button pressed")} 
+          onPress={async () => {
+            console.log("GREEN DIAMOND PRESSED!");
+            try {
+              
+              const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+              if (status !== 'granted') {
+                alert('Need camera roll permissions!');
+                return;
+              }
+
+              let result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsMultipleSelection: true,
+                selectionLimit: 5,
+                quality: 0.7,
+              });
+
+              if (!result.canceled) {
+                console.log("Images picked!", result.assets.length);
+                const selectedUris = result.assets.map(asset => asset.uri);
+                navigation.navigate('CreateListing', { initialImages: selectedUris }); 
+              }
+            } catch (error) {
+              console.log("Image picker error:", error);
+            }
+          }} 
         >
           <MaterialCommunityIcons name="plus" size={32} color="#FFF" style={styles.fabIcon} />
         </TouchableOpacity>
@@ -65,44 +90,47 @@ export default function NavBar({ navigation, activeScreen }) {
   );
 }
 
-// 4. Wrap the styles in a function that accepts 'colors'
 const getNavBarStyles = (colors) => StyleSheet.create({
   bottomNavContainer: {
     position: 'absolute',
-    bottom: 0,
-    width: '100%',
-    height: 70,
-    backgroundColor: colors.navbar, // Dynamic!
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    bottom: 25,
+    left: 20,
+    right: 20,
+    height: 60,
+    backgroundColor: colors.navbar,
+    borderRadius: 40,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10},
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
   },
   navIcon: {
-    padding: 10,
+    padding: 8,
   },
   fabWrapper: {
     position: 'absolute',
-    bottom: 30, 
+    bottom: 45, 
     alignSelf: 'center',
-    width: 80,
-    height: 80,
-    backgroundColor: colors.background, // Dynamic!
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
     zIndex: 10,
   },
   fabDiamond: {
-    width: 56,
-    height: 56,
-    backgroundColor: colors.accent, // Dynamic!
+    width: 50,
+    height: 50,
+    backgroundColor: colors.accent, 
     borderRadius: 16,
     transform: [{ rotate: '45deg' }], 
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: colors.accent,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 8,
   },
   fabIcon: {
     transform: [{ rotate: '-45deg' }], 

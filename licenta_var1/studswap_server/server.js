@@ -2,6 +2,30 @@ const express = require('express');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
+const multer = require('multer');
+
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'studswap_listings', // This creates the folder in your Cloudinary account
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+  },
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 } // max 5MB per photo
+});
+
 const { db, auth } = require('./firebase');
 
 const app = express();
@@ -9,7 +33,7 @@ app.use(cors());
 app.use(express.json());
 
 // --- Setting up email sender
-const transporter = nodemailer.createTransport({ // Aici am corectat din transpoter în transporter!
+const transporter = nodemailer.createTransport({ 
   service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
@@ -138,7 +162,6 @@ app.post('/api/auth/login', async (req, res) => {
 
     if (!response.ok) {
       console.error("Firebase login error:", data);
-      // Firebase returns specific error messages
       const errorMessage = data.error?.message || "Invalid email or password";
       return res.status(401).json({ error: errorMessage });
     }
@@ -191,7 +214,6 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 
   } catch (error) {
     console.error("Forgot Password Error:", error);
-    // If the email isn't in the database, tell the user
     if (error.code === 'auth/user-not-found') {
       return res.status(404).json({ error: "No account found with this email." });
     }
@@ -200,7 +222,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 });
 
 
-// Get user by ID
+// get user ID
 app.get('/api/users/:userId', async (req, res) => {
   try {
     const userDoc = await db.collection('Users').doc(req.params.userId).get();
@@ -212,6 +234,25 @@ app.get('/api/users/:userId', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+
+// --- image upload route - max 5
+app.post('/api/upload', upload.array('images', 5), (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: "No images uploaded." });
+    }
+
+    // Cloudinary automatically gives us the secure URL in file.path
+    const imageUrls = req.files.map(file => file.path);
+
+    res.status(200).json({ imageUrls });
+  } catch (error) {
+    console.error("Upload Route Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 // Get all listings
 app.get('/api/listings', async (req, res) => {
@@ -227,22 +268,23 @@ app.get('/api/listings', async (req, res) => {
   }
 });
 
-// Create new listing (POST)
+// creating new listing
 app.post('/api/listings', async (req, res) => {
   try {
-    const { title, description, price, category, userId, userName, location, faculty, condition } = req.body;
+    const { title, description, price, category, announcementType, userId, userName, location, faculty, condition, images } = req.body;
     
     const listingRef = await db.collection('Listings').add({
       title,
       description,
       price,
       category,
+      announcementType, 
       userId,
       userName,
       location,
       faculty,
       condition,
-      image: null, // Add image upload later
+      images: images || [], 
       createdAt: new Date().toISOString()
     });
 

@@ -5,7 +5,6 @@ export const getHomeStyles = (colors) => StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  // --- HEADER & SEARCH ---
   headerContainer: {
     paddingHorizontal: 20,
     paddingTop: 50, 
@@ -14,7 +13,7 @@ export const getHomeStyles = (colors) => StyleSheet.create({
   locationPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.inputBorder, // Dynamic background
+    backgroundColor: colors.inputBorder, 
     alignSelf: 'flex-start',
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -43,7 +42,6 @@ export const getHomeStyles = (colors) => StyleSheet.create({
     fontSize: 16,
     flex: 1,
   },
-  // --- FILTERS ---
   filtersContainer: {
     paddingHorizontal: 20,
     marginBottom: 16,
@@ -68,10 +66,9 @@ export const getHomeStyles = (colors) => StyleSheet.create({
     fontSize: 14,
   },
   filterTextActive: {
-    color: '#FFF', // White text always looks good on the solid green active pill
+    color: '#FFF', 
     fontWeight: 'bold',
   },
-  // --- FEED CARDS ---
   feedContainer: {
     paddingHorizontal: 20,
     paddingBottom: 100, 
@@ -124,7 +121,7 @@ export const getHomeStyles = (colors) => StyleSheet.create({
   imagePlaceholder: {
     width: '100%',
     height: 250,
-    backgroundColor: colors.inputBorder, // Adapts to dark mode
+    backgroundColor: colors.inputBorder, 
     justifyContent: 'center',
     alignItems: 'center',
   },
