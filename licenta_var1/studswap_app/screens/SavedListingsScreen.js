@@ -1,88 +1,107 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import React from 'react';
+import { View, Text, TextInput, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
+import { getSavedStyles } from '../styles/SavedListingsStyle';
+import { useSavedListings } from '../hooks/useSavedListings';
 import NavBar from '../components/NavBar';
-import { useTheme } from '../context/ThemeContext'; 
-import { getHomeStyles } from '../styles/HomeScreenStyle';
 
 export default function SavedListingsScreen({ navigation }) {
   const { colors } = useTheme();
-  const styles = getHomeStyles(colors);
-
-  const [savedListings, setSavedListings] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // TODO: Fetch saved listings from Firebase
-    setLoading(false);
-  }, []);
+  const styles = getSavedStyles(colors);
+  
+  const { 
+    searchQuery, setSearchQuery, 
+    filteredItems, loading, handleRemoveSaved 
+  } = useSavedListings();
 
   const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{item.userName?.charAt(0) || 'U'}</Text>
-        </View>
-        <View style={styles.headerTextContainer}>
-          <Text style={{ fontWeight: 'bold', color: colors.textDark }}>{item.title}</Text>
-          <Text style={{ fontSize: 12, color: colors.muted }}>{item.category}</Text>
-        </View>
-        <TouchableOpacity>
-          <MaterialCommunityIcons name="heart" size={24} color={colors.accent} />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.imagePlaceholder}>
-        {item.image ? (
-          <Text style={{ color: colors.muted }}>Image</Text>
+    <TouchableOpacity 
+      style={styles.listItem}
+      activeOpacity={0.7}
+      onPress={() => navigation.navigate('ListingDetails', { listing: item })}
+    >
+      {/* Poza din stânga */}
+      <View style={styles.itemImageWrapper}>
+        {item.images && item.images.length > 0 ? (
+          <Image source={{ uri: item.images[0] }} style={styles.itemImage} />
         ) : (
-          <MaterialCommunityIcons name="image-outline" size={80} color={colors.muted} />
+          <View style={[styles.itemImage, { justifyContent: 'center', alignItems: 'center' }]}>
+            <MaterialCommunityIcons name="image-outline" size={30} color={colors.muted} />
+          </View>
         )}
       </View>
 
-      <View style={styles.cardFooter}>
-        <View style={styles.footerLines}>
-          <Text style={{ fontWeight: 'bold', fontSize: 16, color: colors.textDark }}>
-            ${item.price}
-          </Text>
-          <Text style={{ fontSize: 12, color: colors.muted, marginTop: 4 }}>
-            {item.location}
-          </Text>
-        </View>
-        <TouchableOpacity style={{ padding: 8 }}>
-          <MaterialCommunityIcons name="heart" size={24} color={colors.accent} />
-        </TouchableOpacity>
+      {/* Informațiile din mijloc */}
+      <View style={styles.itemInfo}>
+        <Text style={styles.itemTitle} numberOfLines={1}>{item.title}</Text>
+        <Text style={styles.itemCategory}>{item.category} • {item.condition}</Text>
+        <Text style={styles.itemPrice}>
+          {item.announcementType === 'Donation' ? 'Free / Donation' : 
+           item.announcementType === 'Exchange' ? 'For Exchange' : 
+           `${item.price} RON`}
+        </Text>
       </View>
-    </View>
+
+      {/* Butonul de ștergere (Inima plină pe care o deselectezi) din dreapta */}
+      <TouchableOpacity 
+        style={styles.removeBtn} 
+        onPress={() => handleRemoveSaved(item.id)}
+      >
+        <MaterialCommunityIcons name="heart" size={28} color={colors.accent} />
+      </TouchableOpacity>
+    </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerContainer}>
-        <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.textDark }}>
-          Saved Listings
-        </Text>
+      
+      {/* HEADER & SEARCH BAR */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Saved Items</Text>
+        
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color={colors.muted} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search saved items..."
+            placeholderTextColor={colors.muted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Ionicons name="close-circle" size={20} color={colors.muted} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
-      {savedListings.length === 0 ? (
+      {/* LISTA DE ANUNȚURI */}
+      {loading ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <MaterialCommunityIcons name="heart-outline" size={80} color={colors.inputBorder} />
-          <Text style={{ marginTop: 16, color: colors.muted, fontSize: 16 }}>
-            No saved listings yet
-          </Text>
+          <ActivityIndicator size="large" color={colors.accent} />
         </View>
       ) : (
         <FlatList
-          data={savedListings}
+          data={filteredItems}
           keyExtractor={item => item.id}
           renderItem={renderItem}
-          contentContainerStyle={styles.feedContainer}
+          contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <MaterialCommunityIcons name="heart-broken-outline" size={80} color={colors.inputBorder} />
+              <Text style={styles.emptyText}>
+                {searchQuery ? "No saved items match your search." : "You haven't saved any items yet."}
+              </Text>
+            </View>
+          }
         />
       )}
 
-      {/* Corrected to match exact spelling in NavBar.js */}
-      <NavBar navigation={navigation} activeScreen="SavedListings" /> 
+      {/* BARA DE JOS */}
+      <NavBar navigation={navigation} activeScreen="SavedListings" />
     </View>
   );
 }

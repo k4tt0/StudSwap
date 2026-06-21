@@ -16,7 +16,7 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'studswap_listings', // This creates the folder in your Cloudinary account
+    folder: 'studswap_listings', 
     allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
   },
 });

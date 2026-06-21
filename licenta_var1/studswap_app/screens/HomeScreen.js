@@ -20,63 +20,75 @@ export default function HomeScreen({ navigation }) {
     filteredListings,
     searchQuery, setSearchQuery,
     loading,
-    filters, updateFilter, clearFilters, setFilters
+    filters, updateFilter, clearFilters, setFilters,
+    savedIds, toggleLike 
   } = useHomeListings();
 
   const [isFilterVisible, setIsFilterVisible] = useState(false);
 
-  const renderItem = ({ item }) => (
-    <TouchableOpacity 
-      style={styles.card} 
-      delayPressIn={150} 
-      activeOpacity={0.7}
-      onPress={() => {/* Navigate to detail */}}
-    >
-      <View style={styles.cardHeader}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{item.userName?.charAt(0) || 'U'}</Text>
-        </View>
-        <View style={styles.headerTextContainer}>
-          <Text style={{ fontWeight: 'bold', color: colors.textDark }}>{item.title}</Text>
-          <Text style={{ fontSize: 12, color: colors.muted }}>{item.category}</Text>
-        </View>
-        <TouchableOpacity>
-          <MaterialCommunityIcons name="heart-outline" size={24} color={colors.accent} />
-        </TouchableOpacity>
-      </View>
+  const renderItem = ({ item }) => {
+    const itemId = item.id || item._id; 
+    const isLiked = savedIds.includes(itemId);
 
-      <View style={[styles.imagePlaceholder, { overflow: 'hidden' }]}>
-        {item.images && item.images.length > 0 ? (
-          <Image 
-            source={{ uri: item.images[0] }} 
-            style={{ width: '100%', height: '100%', resizeMode: 'cover' }} 
-          />
-        ) : (
-          <MaterialCommunityIcons name="image-outline" size={80} color={colors.muted} />
-        )}
-      </View>
-
-      <View style={styles.cardFooter}>
-        <View style={styles.footerLines}>
-          <Text style={{ 
-            fontWeight: 'bold', 
-            fontSize: 18, 
-            color: item.announcementType === 'Donation' ? colors.accent : colors.textDark 
-          }}>
-            {item.announcementType === 'Donation' ? 'Free / Donation' : 
-             item.announcementType === 'Exchange' ? 'For Exchange' : 
-             `${item.price} RON`}
-          </Text>
-          <Text style={{ fontSize: 12, color: colors.muted, marginTop: 4 }}>
-            {item.location} • {item.condition}
-          </Text>
-          <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>
-            {item.faculty || 'Various'}
-          </Text>
+    return (
+      <TouchableOpacity 
+        style={styles.card} 
+        delayPressIn={150} 
+        activeOpacity={0.7}
+        onPress={() => navigation.navigate('ListingDetails', { listing: item })}
+      >
+        <View style={styles.cardHeader}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{item.userName?.charAt(0) || 'U'}</Text>
+          </View>
+          <View style={styles.headerTextContainer}>
+            <Text style={{ fontWeight: 'bold', color: colors.textDark }}>{item.title}</Text>
+            <Text style={{ fontSize: 12, color: colors.muted }}>{item.category}</Text>
+          </View>
+          
+          {/* AICI ESTE BUTONUL DE LIKE FUNCTIONAL! */}
+          <TouchableOpacity onPress={() => toggleLike(itemId)}>
+            <MaterialCommunityIcons 
+              name={isLiked ? "heart" : "heart-outline"} 
+              size={24} 
+              color={colors.accent} 
+            />
+          </TouchableOpacity>
         </View>
-      </View>
-    </TouchableOpacity>
-  );
+
+        <View style={[styles.imagePlaceholder, { overflow: 'hidden' }]}>
+          {item.images && item.images.length > 0 ? (
+            <Image 
+              source={{ uri: item.images[0] }} 
+              style={{ width: '100%', height: '100%', resizeMode: 'cover' }} 
+            />
+          ) : (
+            <MaterialCommunityIcons name="image-outline" size={80} color={colors.muted} />
+          )}
+        </View>
+
+        <View style={styles.cardFooter}>
+          <View style={styles.footerLines}>
+            <Text style={{ 
+              fontWeight: 'bold', 
+              fontSize: 18, 
+              color: item.announcementType === 'Donation' ? colors.accent : colors.textDark 
+            }}>
+              {item.announcementType === 'Donation' ? 'Free / Donation' : 
+               item.announcementType === 'Exchange' ? 'For Exchange' : 
+               `${item.price} RON`}
+            </Text>
+            <Text style={{ fontSize: 12, color: colors.muted, marginTop: 4 }}>
+              {item.location} • {item.condition}
+            </Text>
+            <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>
+              {item.faculty || 'Various'}
+            </Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   const renderFilterPills = (title, dataKey, options) => (
     <View style={{ marginBottom: 20 }}>
@@ -130,9 +142,7 @@ export default function HomeScreen({ navigation }) {
             style={{
               backgroundColor: colors.surface, padding: 12, borderRadius: 12, 
               borderWidth: 1, borderColor: colors.inputBorder,
-              position: 'relative',
-              justifyContent: 'center',
-              alignItems: 'center'
+              position: 'relative', justifyContent: 'center', alignItems: 'center'
             }}
           >
             <Ionicons name="options-outline" size={24} color={colors.textDark} />
@@ -150,7 +160,7 @@ export default function HomeScreen({ navigation }) {
       ) : (
         <FlatList
           data={filteredListings}
-          keyExtractor={item => item.id}
+          keyExtractor={item => item.id || item._id}
           renderItem={renderItem}
           contentContainerStyle={[styles.feedContainer, { paddingBottom: 100 }]}
           showsVerticalScrollIndicator={false}
@@ -165,7 +175,7 @@ export default function HomeScreen({ navigation }) {
         />
       )}
 
-      {/* --- FILTER --- */}
+      {/* --- FILTER MODAL --- */}
       <Modal visible={isFilterVisible} animationType="slide" transparent={true}>
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
           <View style={{ backgroundColor: colors.background, borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 25, height: '85%' }}>

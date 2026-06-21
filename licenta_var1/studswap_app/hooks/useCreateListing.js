@@ -33,7 +33,7 @@ export const useCreateListing = (navigation, initialImages = []) => {
     }
 
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['image'], 
       allowsMultipleSelection: true,
       selectionLimit: remainingSlots,
       quality: 0.7,

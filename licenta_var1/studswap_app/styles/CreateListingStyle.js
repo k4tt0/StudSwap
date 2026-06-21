@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 
 export const getCreateListingStyles = (colors) => StyleSheet.create({
   header: { 
@@ -31,22 +31,23 @@ export const getCreateListingStyles = (colors) => StyleSheet.create({
   },
   removeIcon: { 
     position: 'absolute', 
-    top: -5, 
-    right: 10, 
-    backgroundColor: '#FFF', 
-    borderRadius: 12 
+    top: 5, 
+    right: 20, 
+    backgroundColor: 'rgba(0,0,0,0.6)', 
+    borderRadius: 15,
+    padding: 2,
   },
   addImageBtn: { 
     width: 120, 
     height: 120, 
     borderRadius: 12, 
-    borderWidth: 1, 
+    borderWidth: 2, 
     borderStyle: 'dashed', 
     justifyContent: 'center', 
     alignItems: 'center', 
     marginRight: 20,
     backgroundColor: colors.surface, 
-    borderColor: colors.inputBorder 
+    borderColor: colors.muted 
   },
   formContainer: { 
     paddingHorizontal: 20 
@@ -66,60 +67,73 @@ export const getCreateListingStyles = (colors) => StyleSheet.create({
     fontSize: 16,
     borderColor: colors.inputBorder, 
     color: colors.textDark, 
-    backgroundColor: colors.surface 
+    backgroundColor: colors.surface,
+    flexDirection: 'row', 
+    justifyContent: 'space-between',
+    alignItems: 'center'
   },
   textArea: { 
     height: 100, 
-    paddingTop: 12 
+    paddingTop: 12,
+    alignItems: 'flex-start' 
   },
   dropdownContainer: { 
     marginTop: 16, 
-    position: 'relative' 
   },
-  optionsBox: { 
-    borderWidth: 1, 
-    borderRadius: 12, 
-    marginTop: 4, 
-    paddingVertical: 4,
-    backgroundColor: colors.surface, 
-    borderColor: colors.inputBorder 
-  },
-  optionItem: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    paddingVertical: 12, 
-    paddingHorizontal: 16 
-  },
-  optionText: {
-    color: colors.textDark 
-  },
-  floatingFooter: { 
-    position: 'absolute', 
-    bottom: 0, 
+  bottomFooter: { 
     width: '100%', 
     padding: 20, 
-    paddingBottom: 40, 
-    borderTopWidth: 1,
+    paddingBottom: Platform.OS === 'ios' ? 30 : 20, 
     backgroundColor: colors.background, 
+    borderTopWidth: 1,
     borderTopColor: colors.inputBorder,
-    zIndex: 999,
-    elevation: 10,
   },
   publishBtn: { 
     height: 56, 
     borderRadius: 28, 
     justifyContent: 'center', 
     alignItems: 'center', 
-    shadowColor: '#000', 
+    shadowColor: colors.accent, 
     shadowOffset: { width: 0, height: 4 }, 
-    shadowOpacity: 0.2, 
+    shadowOpacity: 0.3, 
     shadowRadius: 5, 
     elevation: 5,
-    backgroundColor: colors.textDark
+    backgroundColor: colors.accent 
   },
   publishBtnText: { 
     color: '#FFF', 
     fontSize: 16, 
     fontWeight: '700' 
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    padding: 25,
+    maxHeight: '50%', 
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  modalOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 15,
+    marginBottom: 10,
   }
 });

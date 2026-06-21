@@ -15,6 +15,7 @@ import SavedListingsScreen from './screens/SavedListingsScreen';
 import MessagesScreen from './screens/MessagesScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import CreateListingScreen from './screens/CreateListingScreen';
+import ListingDetailsScreen from './screens/ListingDetailsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -50,6 +51,7 @@ function AppNavigator() {
                 component={VerifyEmailScreen} 
                 options={{ gestureEnabled: false }} 
               />
+              <Stack.Screen name="ListingDetails" component={ListingDetailsScreen} />
             </Stack.Group>
 
             <Stack.Group screenOptions={{ animation: 'none' }}>
