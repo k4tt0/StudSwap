@@ -2,8 +2,8 @@
 *.docx
 .env
 node_modules
-/licenta_var1/studswap_app/firebaseConfig.js
-/licenta_var1/studswap_server/firebaseServiceAccount.json
-/licenta_var1/studswap_server/package-lock.json
-/licenta_var1/studswap_server/package.json
-/licenta_var1/studswap_server/firebase.js
+licenta_var1/studswap_app/firebaseConfig.js
+licenta_var1/studswap_server/firebaseServiceAccount.json
+licenta_var1/studswap_server/package-lock.json
+licenta_var1/studswap_server/package.json
+licenta_var1/studswap_server/firebase.js
