@@ -7,6 +7,7 @@ export const useSavedListings = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [savedItems, setSavedItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sortOrder, setSortOrder] = useState('newest'); 
 
   useFocusEffect(
     useCallback(() => {
@@ -17,7 +18,11 @@ export const useSavedListings = () => {
   const fetchSavedItems = async () => {
     setLoading(true);
     try {
-      const savedIdsStr = await AsyncStorage.getItem('savedListings');
+      const myUserId = await AsyncStorage.getItem('userId');
+      if (!myUserId) return;
+      
+      const storageKey = `savedListings_${myUserId}`; 
+      const savedIdsStr = await AsyncStorage.getItem(storageKey);
       const savedIds = savedIdsStr ? JSON.parse(savedIdsStr) : [];
 
       if (savedIds.length === 0) {
@@ -30,11 +35,14 @@ export const useSavedListings = () => {
       if (res.ok) {
         const allListings = await res.json();
         
-        const filtered = allListings.filter(item => savedIds.includes(item.id || item._id));
-        setSavedItems(filtered);
+        const mappedItems = savedIds
+          .map(id => allListings.find(item => (item.id || item._id) === id))
+          .filter(Boolean); 
+          
+        setSavedItems(mappedItems);
       }
     } catch (error) {
-      console.error("Eroare la descărcarea favoritelor reale:", error);
+      console.error("Eroare la descărcarea favoritelor:", error);
     } finally {
       setLoading(false);
     }
@@ -44,22 +52,35 @@ export const useSavedListings = () => {
     setSavedItems(prev => prev.filter(item => (item.id || item._id) !== id));
     
     try {
-      const savedIdsStr = await AsyncStorage.getItem('savedListings');
+      const myUserId = await AsyncStorage.getItem('userId');
+      const storageKey = `savedListings_${myUserId}`;
+      
+      const savedIdsStr = await AsyncStorage.getItem(storageKey);
       let savedIds = savedIdsStr ? JSON.parse(savedIdsStr) : [];
       savedIds = savedIds.filter(savedId => savedId !== id);
-      await AsyncStorage.setItem('savedListings', JSON.stringify(savedIds));
+      await AsyncStorage.setItem(storageKey, JSON.stringify(savedIds));
     } catch(e) {
       console.error(e);
     }
   };
 
-  const filteredItems = savedItems.filter(item =>
+  const toggleSortOrder = () => {
+    setSortOrder(prev => prev === 'newest' ? 'oldest' : 'newest');
+  };
+
+  let filteredAndSorted = savedItems.filter(item =>
     item.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  if (sortOrder === 'newest') {
+    filteredAndSorted = [...filteredAndSorted].reverse();
+  }
+
   return {
     searchQuery, setSearchQuery,
-    filteredItems, loading,
-    handleRemoveSaved
+    filteredItems: filteredAndSorted, 
+    loading,
+    handleRemoveSaved,
+    sortOrder, toggleSortOrder
   };
 };

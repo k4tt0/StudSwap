@@ -1,4 +1,6 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
 
 export const getMessagesStyles = (colors) => StyleSheet.create({
   container: {
@@ -7,71 +9,92 @@ export const getMessagesStyles = (colors) => StyleSheet.create({
   },
   headerContainer: {
     paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    backgroundColor: colors.surface,
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: 'bold',
     color: colors.textDark,
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
+  twitterTabBar: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.inputBorder,
+  },
+  twitterTab: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 14,
+    position: 'relative',
+  },
+  twitterTabText: {
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  activeIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    width: 80,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: colors.accent,
+  },
+  viewPager: {
+    width: width,
   },
   feedContainer: {
+    width: width,
     paddingHorizontal: 20,
-    paddingBottom: 100,
+    paddingTop: 15,
+    paddingBottom: 110,
   },
   chatCard: {
     flexDirection: 'row',
     backgroundColor: colors.surface,
-    padding: 15,
+    padding: 12,
     borderRadius: 16,
     marginBottom: 12,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.inputBorder,
   },
-  avatar: {
+  listingAvatar: {
     width: 52,
     height: 52,
-    borderRadius: 26,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderRadius: 12,
+    backgroundColor: colors.background,
     marginRight: 15,
-  },
-  avatarText: {
-    color: '#FFF',
-    fontSize: 20,
-    fontWeight: 'bold',
   },
   chatInfo: {
     flex: 1,
-    justifyContent: 'center',
   },
   chatName: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 'bold',
     color: colors.textDark,
     marginBottom: 4,
   },
   lastMessage: {
-    fontSize: 14,
+    fontSize: 13,
     color: colors.muted,
   },
   timeText: {
     fontSize: 12,
     color: colors.muted,
     marginLeft: 10,
-    alignSelf: 'flex-start',
-    marginTop: 2,
   },
   emptyContainer: {
     flex: 1,
+    width: width,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingTop: 100,
   },
   emptyText: {
-    marginTop: 16,
+    marginTop: 12,
     color: colors.muted,
-    fontSize: 16,
+    fontSize: 15,
   }
 });

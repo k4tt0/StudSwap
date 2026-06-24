@@ -1,21 +1,16 @@
 import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_BASE_URL } from '../firebaseConfig'; 
+import { Alert } from 'react-native';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { API_BASE_URL, db } from '../firebaseConfig'; 
 
 export const useListingDetails = (currentListing, navigation) => {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  
   const [isViewerVisible, setIsViewerVisible] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
 
-  const openImageViewer = (index) => {
-    setViewerIndex(index);
-    setIsViewerVisible(true);
-  };
-
-  const closeImageViewer = () => {
-    setIsViewerVisible(false);
-  };
+  const openImageViewer = (index) => { setViewerIndex(index); setIsViewerVisible(true); };
+  const closeImageViewer = () => setIsViewerVisible(false);
 
   const [sellerListings, setSellerListings] = useState([]);
   const [similarListings, setSimilarListings] = useState([]);
@@ -24,72 +19,58 @@ export const useListingDetails = (currentListing, navigation) => {
   useEffect(() => {
     const fetchExtraListings = async () => {
       if (!currentListing) return;
-      
       try {
         setLoadingExtra(true);
         const res = await fetch(`${API_BASE_URL}/api/listings`);
         if (res.ok) {
           const allListings = await res.json();
-          
-          const sellerItems = allListings.filter(
-            item => item.userId === currentListing.userId && item.id !== currentListing.id
-          );
-          
-          const similarItems = allListings.filter(
-            item => item.category === currentListing.category && 
-                    item.userId !== currentListing.userId &&
-                    item.id !== currentListing.id
-          );
-
+          const sellerItems = allListings.filter(item => item.userId === currentListing.userId && (item.id || item._id) !== (currentListing.id || currentListing._id));
+          const similarItems = allListings.filter(item => item.category === currentListing.category && item.userId !== currentListing.userId && (item.id || item._id) !== (currentListing.id || currentListing._id));
           setSellerListings(sellerItems);
           setSimilarListings(similarItems);
         }
-      } catch (error) {
-        console.error("Eroare la descărcarea anunțurilor extra:", error);
-      } finally {
-        setLoadingExtra(false);
-      }
+      } catch (error) { console.error(error); } 
+      finally { setLoadingExtra(false); }
     };
-
     fetchExtraListings();
   }, [currentListing]);
 
   const handleScroll = (event) => {
     const slideSize = event.nativeEvent.layoutMeasurement.width;
-    const index = event.nativeEvent.contentOffset.x / slideSize;
-    const roundIndex = Math.round(index);
-    
-    if (roundIndex !== activeImageIndex) {
-      setActiveImageIndex(roundIndex);
-    }
+    const index = Math.round(event.nativeEvent.contentOffset.x / slideSize);
+    if (index !== activeImageIndex) setActiveImageIndex(index);
   };
 
   const handleContactSeller = async (sellerId, sellerName) => {
     try {
       const myUserId = await AsyncStorage.getItem('userId');
       if (!myUserId) return;
-
-      if (myUserId === sellerId) {
-        alert("Acesta este anunțul tău!");
-        return;
-      }
+      if (myUserId === sellerId) return alert("This is your own listing!");
 
       const chatId = [myUserId, sellerId].sort().join('_') + `_${currentListing.id || currentListing._id}`;
-
       navigation.navigate('ChatRoom', {
-        chatId: chatId,
-        otherUserId: sellerId,
-        otherUserName: sellerName,
-        listingId: currentListing.id || currentListing._id
+        chatId, otherUserId: sellerId, otherUserName: sellerName, listingId: currentListing.id || currentListing._id
       });
-    } catch (error) {
-      console.error(error);
-    }
+    } catch (error) { console.error(error); }
   };
 
-  return {
-    activeImageIndex, handleScroll, handleContactSeller,
-    sellerListings, similarListings, loadingExtra,
-    isViewerVisible, viewerIndex, openImageViewer, closeImageViewer
+  const handleDeleteListing = () => {
+    Alert.alert("Delete Listing", "Are you sure you want to delete this listing?", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", style: "destructive", onPress: async () => {
+          try {
+            const idToDelete = currentListing.id || currentListing._id;
+            const res = await fetch(`${API_BASE_URL}/api/listings/${idToDelete}`, { method: 'DELETE' });
+            if (res.ok) {
+              Alert.alert("Deleted", "Your listing has been removed.");
+              navigation.navigate('Profile'); 
+            } else {
+              Alert.alert("Error", "Failed to delete.");
+            }
+          } catch (error) { Alert.alert("Error", "Network error."); }
+      }}
+    ]);
   };
+
+  return { activeImageIndex, handleScroll, handleContactSeller, sellerListings, similarListings, loadingExtra, isViewerVisible, viewerIndex, openImageViewer, closeImageViewer, handleDeleteListing };
 };

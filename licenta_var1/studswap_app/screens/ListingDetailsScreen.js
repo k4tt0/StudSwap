@@ -6,6 +6,8 @@ import { useTheme } from '../context/ThemeContext';
 import { getListingDetailsStyles } from '../styles/ListingDetailsStyle';
 import { useListingDetails } from '../hooks/useListingDetails';
 import ImageView from "react-native-image-viewing";
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebaseConfig';
 
 const { width } = Dimensions.get('window');
 
@@ -18,15 +20,33 @@ export default function ListingDetailsScreen({ route, navigation }) {
   const { 
     activeImageIndex, handleScroll, handleContactSeller,
     sellerListings, similarListings, loadingExtra,
-    isViewerVisible, viewerIndex, openImageViewer, closeImageViewer
+    isViewerVisible, viewerIndex, openImageViewer, closeImageViewer,
+    handleDeleteListing
   } = useListingDetails(listing, navigation);
 
   const [isLiked, setIsLiked] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
+
+  useEffect(() => {
+    const fetchCurrentUserId = async () => {
+      try {
+        const id = await AsyncStorage.getItem('userId');
+        setCurrentUserId(id);
+      } catch (error) {
+        console.error("Eroare la citirea userId-ului curent:", error);
+      }
+    };
+    fetchCurrentUserId();
+  }, []);
 
   useEffect(() => {
     const checkLikeStatus = async () => {
       try {
-        const savedIdsStr = await AsyncStorage.getItem('savedListings');
+        const myUserId = await AsyncStorage.getItem('userId');
+        if (!myUserId) return;
+
+        const storageKey = `savedListings_${myUserId}`;
+        const savedIdsStr = await AsyncStorage.getItem(storageKey);
         const savedIds = savedIdsStr ? JSON.parse(savedIdsStr) : [];
         const itemId = listing.id || listing._id;
         
@@ -42,8 +62,11 @@ export default function ListingDetailsScreen({ route, navigation }) {
 
   const toggleLike = async () => {
     try {
+      const myUserId = await AsyncStorage.getItem('userId');
+      const storageKey = `savedListings_${myUserId}`;
       const itemId = listing.id || listing._id;
-      const savedIdsStr = await AsyncStorage.getItem('savedListings');
+      
+      const savedIdsStr = await AsyncStorage.getItem(storageKey);
       let savedIds = savedIdsStr ? JSON.parse(savedIdsStr) : [];
 
       if (isLiked) {
@@ -52,14 +75,40 @@ export default function ListingDetailsScreen({ route, navigation }) {
       } else {
         savedIds.push(itemId);
         setIsLiked(true);
+
+        // Dacă nu este anunțul nostru, trimitem notificare
+        if (listing.userId !== myUserId) {
+          try {
+            // CORECT: Folosim API_BASE_URL
+            const userRes = await fetch(`${API_BASE_URL}/api/users/${myUserId}`); 
+            let senderName = 'Someone';
+            
+            if (userRes.ok) {
+              const userData = await userRes.json();
+              senderName = userData.displayName || 'Someone';
+            }
+
+            await addDoc(collection(db, 'Notifications'), {
+              receiverId: listing.userId,
+              senderId: myUserId,
+              senderName: senderName,
+              listingId: itemId,
+              type: 'like',
+              text: `${senderName} saved your listing "${listing.title}".`,
+              isRead: false,
+              timestamp: serverTimestamp()
+            });
+          } catch(e) {
+            console.error("Error sending notification:", e);
+          }
+        }
       }
-      await AsyncStorage.setItem('savedListings', JSON.stringify(savedIds));
+      await AsyncStorage.setItem(storageKey, JSON.stringify(savedIds));
     } catch (error) {
-      console.error("Eroare la salvarea favoritului:", error);
+      console.error("Error saving favourite item:", error);
     }
   }
 
-  
   const renderMiniCard = (item) => (
     <TouchableOpacity 
       key={item.id} 
@@ -100,7 +149,7 @@ export default function ListingDetailsScreen({ route, navigation }) {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         
-        {/* CARUSEL IMAGINI MARI */}
+        {/* CARUSEL IMAGINI */}
         <View style={styles.imageCarouselContainer}>
           {listing.images && listing.images.length > 0 ? (
             <ScrollView
@@ -138,14 +187,17 @@ export default function ListingDetailsScreen({ route, navigation }) {
         <View style={styles.contentContainer}>
           
           <View style={styles.headerRow}>
-            <Text style={styles.title}>{listing.title}</Text>
-            <TouchableOpacity onPress={toggleLike}>
-              <MaterialCommunityIcons 
-                name={isLiked ? "heart" : "heart-outline"} 
-                size={30} 
-                color={colors.accent} 
-              />
-            </TouchableOpacity>
+            <Text style={styles.title} style={{ flex: 1, fontSize: 24, fontWeight: 'bold', color: colors.textDark }}>{listing.title}</Text>
+            
+            {currentUserId !== listing.userId && (
+              <TouchableOpacity onPress={toggleLike}>
+                <MaterialCommunityIcons 
+                  name={isLiked ? "heart" : "heart-outline"} 
+                  size={30} 
+                  color={colors.accent} 
+                />
+              </TouchableOpacity>
+            )}
           </View>
 
           <Text style={styles.price}>
@@ -156,7 +208,6 @@ export default function ListingDetailsScreen({ route, navigation }) {
 
           <View style={styles.divider} />
 
-          {/* Categ și Stare */}
           <View style={styles.metaRow}>
             <MaterialCommunityIcons name="tag-outline" size={24} color={colors.textDark} />
             <Text style={styles.metaText}>{listing.category}</Text>
@@ -186,12 +237,11 @@ export default function ListingDetailsScreen({ route, navigation }) {
             </View>
           </View>
 
-          {/* --- CARUSELE --- */}
+          {/* CARUSELE */}
           {loadingExtra ? (
             <ActivityIndicator size="small" color={colors.accent} style={{ marginTop: 30 }} />
           ) : (
             <>
-              {/* Carusel 1 */}
               {sellerListings.length > 0 && (
                 <View style={styles.carouselSection}>
                   <Text style={styles.carouselTitle}>More from this seller</Text>
@@ -200,8 +250,6 @@ export default function ListingDetailsScreen({ route, navigation }) {
                   </ScrollView>
                 </View>
               )}
-
-              {/* Carusel 2 */}
               {similarListings.length > 0 && (
                 <View style={styles.carouselSection}>
                   <Text style={styles.carouselTitle}>Similar listings</Text>
@@ -216,15 +264,34 @@ export default function ListingDetailsScreen({ route, navigation }) {
         </View>
       </ScrollView>
 
-      {/* BUTON CONTACT */}
       <View style={styles.footer}>
-        <TouchableOpacity 
-          style={styles.contactBtn}
-          onPress={() => handleContactSeller(listing.userId, listing.userName)}
-        >
-          <Ionicons name="chatbubbles-outline" size={24} color="#FFF" />
-          <Text style={styles.contactBtnText}>Message {listing.userName?.split(' ')[0]}</Text>
-        </TouchableOpacity>
+        {currentUserId === listing.userId ? (
+          <View style={{ flexDirection: 'row', width: '100%', gap: 15 }}>
+            <TouchableOpacity 
+              style={[styles.contactBtn, { flex: 1, backgroundColor: colors.muted }]}
+              onPress={() => navigation.navigate('EditListing', { listing: listing })}
+            >
+              <Ionicons name="create-outline" size={22} color="#FFF" />
+              <Text style={styles.contactBtnText}>Edit</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.contactBtn, { flex: 1, backgroundColor: '#E63946' }]}
+              onPress={handleDeleteListing}
+            >
+              <Ionicons name="trash-outline" size={22} color="#FFF" />
+              <Text style={styles.contactBtnText}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity 
+            style={styles.contactBtn}
+            onPress={() => handleContactSeller(listing.userId, listing.userName)}
+          >
+            <Ionicons name="chatbubbles-outline" size={24} color="#FFF" />
+            <Text style={styles.contactBtnText}>Message {listing.userName?.split(' ')[0]}</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <ImageView

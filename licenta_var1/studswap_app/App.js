@@ -16,6 +16,8 @@ import MessagesScreen from './screens/MessagesScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import CreateListingScreen from './screens/CreateListingScreen';
 import ListingDetailsScreen from './screens/ListingDetailsScreen';
+import ChatRoomScreen from './screens/ChatRoomScreen';
+import EditListingScreen from './screens/EditListingScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -52,6 +54,7 @@ function AppNavigator() {
                 options={{ gestureEnabled: false }} 
               />
               <Stack.Screen name="ListingDetails" component={ListingDetailsScreen} />
+              <Stack.Screen name="ChatRoom" component={ChatRoomScreen} /> 
             </Stack.Group>
 
             <Stack.Group screenOptions={{ animation: 'none' }}>
@@ -63,6 +66,7 @@ function AppNavigator() {
 
             <Stack.Group screenOptions={{ presentation: 'modal', animation: 'slide_from_bottom' }}>
               <Stack.Screen name="CreateListing" component={CreateListingScreen} />
+              <Stack.Screen name="EditListing" component={EditListingScreen} />
             </Stack.Group>
 
           </Stack.Navigator>

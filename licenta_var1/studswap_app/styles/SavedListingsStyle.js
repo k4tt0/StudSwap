@@ -16,7 +16,13 @@ export const getSavedStyles = (colors) => StyleSheet.create({
     color: colors.textDark,
     marginBottom: 15,
   },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
   searchContainer: {
+    flex: 1, 
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surface,
@@ -31,6 +37,16 @@ export const getSavedStyles = (colors) => StyleSheet.create({
     marginLeft: 10,
     color: colors.textDark,
     fontSize: 16,
+  },
+  sortBtn: {
+    width: 50,
+    height: 50,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.inputBorder,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   listContainer: {
     paddingHorizontal: 20,

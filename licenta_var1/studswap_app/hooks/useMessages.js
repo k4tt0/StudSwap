@@ -13,10 +13,7 @@ export const useMessages = () => {
 
     const fetchChats = async () => {
       const userId = await AsyncStorage.getItem('userId');
-      if (!userId) {
-        setLoading(false);
-        return;
-      }
+      if (!userId) return setLoading(false);
       setCurrentUserId(userId);
 
       try {
@@ -24,12 +21,21 @@ export const useMessages = () => {
         const q = query(chatsRef, where('participantIds', 'array-contains', userId));
 
         unsubscribe = onSnapshot(q, async (snapshot) => {
+          let allListings = [];
+          try {
+            const listingsRes = await fetch(`${API_BASE_URL}/api/listings`);
+            if (listingsRes.ok) allListings = await listingsRes.json();
+          } catch (e) { console.error(e); }
+
           const loadedChats = [];
           
           for (const docSnapshot of snapshot.docs) {
             const data = docSnapshot.data();
             const otherUserId = data.participantIds.find(id => id !== userId);
             
+            const matchedListing = allListings.find(l => l.id === data.listingId || l._id === data.listingId);
+            const listingImage = matchedListing?.images && matchedListing.images.length > 0 ? matchedListing.images[0] : null;
+
             let otherUserName = "Student";
             try {
               const res = await fetch(`${API_BASE_URL}/api/users/${otherUserId}`);
@@ -37,9 +43,7 @@ export const useMessages = () => {
                 const userData = await res.json();
                 otherUserName = userData.displayName || "Student";
               }
-            } catch (e) {
-              console.error("Nu am putut aduce datele studentului:", e);
-            }
+            } catch (e) { }
 
             let timeString = '';
             if (data.lastMessageTime) {
@@ -52,31 +56,24 @@ export const useMessages = () => {
               ...data,
               otherUserId,
               otherUserName,
+              listingImage,
               timeString,
+              isRead: data.isRead !== undefined ? data.isRead : true, 
+              lastMessageSenderId: data.lastMessageSenderId, 
               rawTime: data.lastMessageTime?.toMillis() || 0
             });
           }
 
           loadedChats.sort((a, b) => b.rawTime - a.rawTime);
-          
           setChats(loadedChats);
           setLoading(false);
         }, 
-        (error) => {
-          console.error("Firebase onSnapshot error:", error);
-          setLoading(false);
-        });
-      } catch (error) {
-        console.error("Firebase setup error:", error);
-        setLoading(false);
-      }
+        (error) => { setLoading(false); });
+      } catch (error) { setLoading(false); }
     };
 
     fetchChats();
-
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
+    return () => { if (unsubscribe) unsubscribe(); };
   }, []);
 
   return { chats, loading, currentUserId };

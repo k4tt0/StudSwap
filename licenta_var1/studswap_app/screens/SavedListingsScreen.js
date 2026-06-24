@@ -12,7 +12,8 @@ export default function SavedListingsScreen({ navigation }) {
   
   const { 
     searchQuery, setSearchQuery, 
-    filteredItems, loading, handleRemoveSaved 
+    filteredItems, loading, handleRemoveSaved,
+    sortOrder, toggleSortOrder 
   } = useSavedListings();
 
   const renderItem = ({ item }) => (
@@ -21,7 +22,6 @@ export default function SavedListingsScreen({ navigation }) {
       activeOpacity={0.7}
       onPress={() => navigation.navigate('ListingDetails', { listing: item })}
     >
-      {/* Poza din stânga */}
       <View style={styles.itemImageWrapper}>
         {item.images && item.images.length > 0 ? (
           <Image source={{ uri: item.images[0] }} style={styles.itemImage} />
@@ -32,7 +32,6 @@ export default function SavedListingsScreen({ navigation }) {
         )}
       </View>
 
-      {/* Informațiile din mijloc */}
       <View style={styles.itemInfo}>
         <Text style={styles.itemTitle} numberOfLines={1}>{item.title}</Text>
         <Text style={styles.itemCategory}>{item.category} • {item.condition}</Text>
@@ -43,10 +42,9 @@ export default function SavedListingsScreen({ navigation }) {
         </Text>
       </View>
 
-      {/* Butonul de ștergere (Inima plină pe care o deselectezi) din dreapta */}
       <TouchableOpacity 
         style={styles.removeBtn} 
-        onPress={() => handleRemoveSaved(item.id)}
+        onPress={() => handleRemoveSaved(item.id || item._id)}
       >
         <MaterialCommunityIcons name="heart" size={28} color={colors.accent} />
       </TouchableOpacity>
@@ -56,28 +54,38 @@ export default function SavedListingsScreen({ navigation }) {
   return (
     <View style={styles.container}>
       
-      {/* HEADER & SEARCH BAR */}
       <View style={styles.header}>
         <Text style={styles.title}>Saved Items</Text>
         
-        <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color={colors.muted} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search saved items..."
-            placeholderTextColor={colors.muted}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={20} color={colors.muted} />
-            </TouchableOpacity>
-          )}
+        {/* SEARCH + SORT BUTTON */}
+        <View style={styles.searchRow}>
+          <View style={styles.searchContainer}>
+            <Ionicons name="search" size={20} color={colors.muted} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search saved items..."
+              placeholderTextColor={colors.muted}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Ionicons name="close-circle" size={20} color={colors.muted} />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* BUTONUL DE SORTARE */}
+          <TouchableOpacity style={styles.sortBtn} onPress={toggleSortOrder}>
+            <MaterialCommunityIcons 
+              name={sortOrder === 'newest' ? "sort-clock-descending-outline" : "sort-clock-ascending-outline"} 
+              size={26} 
+              color={colors.textDark} 
+            />
+          </TouchableOpacity>
         </View>
       </View>
 
-      {/* LISTA DE ANUNȚURI */}
       {loading ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator size="large" color={colors.accent} />
@@ -85,7 +93,7 @@ export default function SavedListingsScreen({ navigation }) {
       ) : (
         <FlatList
           data={filteredItems}
-          keyExtractor={item => item.id}
+          keyExtractor={item => item.id || item._id}
           renderItem={renderItem}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
@@ -100,7 +108,6 @@ export default function SavedListingsScreen({ navigation }) {
         />
       )}
 
-      {/* BARA DE JOS */}
       <NavBar navigation={navigation} activeScreen="SavedListings" />
     </View>
   );

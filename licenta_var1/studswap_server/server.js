@@ -294,6 +294,56 @@ app.post('/api/listings', async (req, res) => {
   }
 });
 
+// update listing
+app.put('/api/listings/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, price, category, announcementType, condition } = req.body;
+
+    const listingRef = db.collection('Listings').doc(id);
+    const doc = await listingRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ message: "Listing not found." });
+    }
+
+    await listingRef.update({
+      title,
+      description,
+      price,
+      category,
+      announcementType,
+      condition
+    });
+
+    res.status(200).json({ message: "Listing updated successfully!" });
+  } catch (error) {
+    console.error("Update Listing Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// --- DELETE A LISTING ---
+app.delete('/api/listings/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const listingRef = db.collection('Listings').doc(id);
+    const doc = await listingRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ message: "Listing not found." });
+    }
+
+    await listingRef.delete();
+
+    res.status(200).json({ message: "Listing deleted successfully!" });
+  } catch (error) {
+    console.error("Delete Listing Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => console.log(`StudSwap server running on port ${PORT}`));
