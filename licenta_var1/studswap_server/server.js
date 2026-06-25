@@ -345,6 +345,30 @@ app.put('/api/listings/:id', async (req, res) => {
   }
 });
 
+// mark listing as sold / available (toggle status)
+app.patch('/api/listings/:id/status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!['active', 'sold'].includes(status)) {
+      return res.status(400).json({ error: "Invalid status. Must be 'active' or 'sold'." });
+    }
+
+    const listingRef = db.collection('Listings').doc(id);
+    const doc = await listingRef.get();
+    if (!doc.exists) {
+      return res.status(404).json({ message: "Listing not found." });
+    }
+
+    await listingRef.update({ status });
+    res.status(200).json({ message: `Listing marked as ${status}.` });
+  } catch (error) {
+    console.error("Status Update Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // --- DELETE A LISTING ---
 app.delete('/api/listings/:id', async (req, res) => {
   try {

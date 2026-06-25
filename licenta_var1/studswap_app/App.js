@@ -57,14 +57,20 @@ function AppNavigator() {
               />
               <Stack.Screen name="ListingDetails" component={ListingDetailsScreen} />
               <Stack.Screen name="ChatRoom" component={ChatRoomScreen} /> 
+              <Stack.Screen name="Settings" component={SettingsScreen} />
             </Stack.Group>
 
             <Stack.Group screenOptions={{ animation: 'none' }}>
               <Stack.Screen name="Home" component={HomeScreen} />
               <Stack.Screen name="SavedListings" component={SavedListingsScreen} />
               <Stack.Screen name="Messages" component={MessagesScreen} />
-              <Stack.Screen name="Profile" component={ProfileScreen} />
-              <Stack.Screen name="Settings" component={SettingsScreen} />
+              <Stack.Screen 
+                name="Profile" 
+                component={ProfileScreen}
+                options={({ route }) => ({
+                  animation: route.params?.fromListing ? 'slide_from_right' : 'none',
+                })}
+              />
             </Stack.Group>
 
             <Stack.Group screenOptions={{ presentation: 'modal', animation: 'slide_from_bottom' }}>

@@ -77,7 +77,7 @@ export default function ChatRoomScreen({ route, navigation }) {
           </TouchableOpacity>
           <TouchableOpacity 
             activeOpacity={0.6}
-            onPress={() => otherUserId && navigation.navigate('Profile', { userId: otherUserId })}
+            onPress={() => otherUserId && navigation.navigate('Profile', { userId: otherUserId, fromListing: true })}
           >
             <Text style={styles.headerTitle}>{otherUserName}</Text>
           </TouchableOpacity>

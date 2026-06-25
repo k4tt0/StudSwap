@@ -29,11 +29,12 @@ export default function ListingDetailsScreen({ route, navigation }) {
     activeImageIndex, handleScroll, handleContactSeller,
     sellerListings, similarListings, loadingExtra,
     isViewerVisible, viewerIndex, openImageViewer, closeImageViewer,
-    handleDeleteListing, seller
+    handleDeleteListing, handleMarkAsSold, seller
   } = useListingDetails(listing, navigation);
 
   const [isLiked, setIsLiked] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [currentStatus, setCurrentStatus] = useState(listing.status || 'active');
 
   useEffect(() => {
     const fetchCurrentUserId = async () => {
@@ -203,9 +204,15 @@ export default function ListingDetailsScreen({ route, navigation }) {
                   size={30} 
                   color={colors.accent} 
                 />
-              </TouchableOpacity>
+              </TouchableOpacity>           
             )}
           </View>
+
+          {currentStatus === 'sold' && (
+            <View style={{ alignSelf: 'flex-start', backgroundColor: colors.muted, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12, marginTop: 8 }}>
+              <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 13 }}>SOLD</Text>
+            </View>
+          )}
 
           <Text style={styles.price}>
             {listing.announcementType === 'Donation' ? 'Free / Donation' : 
@@ -240,7 +247,7 @@ export default function ListingDetailsScreen({ route, navigation }) {
           <Text style={styles.sectionTitle}>Seller</Text>
           <TouchableOpacity 
             style={styles.sellerCard} 
-            onPress={() => navigation.navigate('Profile', { userId: seller._id })}
+            onPress={() => navigation.navigate('Profile', { userId: seller._id, fromListing: true })}
           >
             <View style={styles.sellerTextContainer}>
               <Text style={styles.sellerLabel}>Listed by</Text>
@@ -290,22 +297,38 @@ export default function ListingDetailsScreen({ route, navigation }) {
 
       <View style={styles.footer}>
         {currentUserId === listing.userId ? (
-          <View style={{ flexDirection: 'row', width: '100%', gap: 15 }}>
+          <View style={{ width: '100%', gap: 10 }}>
             <TouchableOpacity 
-              style={[styles.contactBtn, { flex: 1, backgroundColor: colors.muted }]}
-              onPress={() => navigation.navigate('EditListing', { listing: listing })}
+              style={[styles.contactBtn, { backgroundColor: currentStatus === 'sold' ? colors.muted : colors.accent }]}
+              onPress={() => handleMarkAsSold(currentStatus, (newStatus) => setCurrentStatus(newStatus))}
             >
-              <Ionicons name="create-outline" size={22} color="#FFF" />
-              <Text style={styles.contactBtnText}>Edit</Text>
+              <Ionicons 
+                name={currentStatus === 'sold' ? 'refresh-outline' : 'checkmark-circle-outline'} 
+                size={22} 
+                color="#FFF" 
+              />
+              <Text style={styles.contactBtnText}>
+                {currentStatus === 'sold' ? 'Mark as Available' : 'Mark as Sold'}
+              </Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.contactBtn, { flex: 1, backgroundColor: '#E63946' }]}
-              onPress={handleDeleteListing}
-            >
-              <Ionicons name="trash-outline" size={22} color="#FFF" />
-              <Text style={styles.contactBtnText}>Delete</Text>
-            </TouchableOpacity>
+
+            <View style={{ flexDirection: 'row', width: '100%', gap: 15 }}>
+              <TouchableOpacity 
+                style={[styles.contactBtn, { flex: 1, backgroundColor: colors.muted }]}
+                onPress={() => navigation.navigate('EditListing', { listing: listing })}
+              >
+                <Ionicons name="create-outline" size={22} color="#FFF" />
+                <Text style={styles.contactBtnText}>Edit</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.contactBtn, { flex: 1, backgroundColor: '#E63946' }]}
+                onPress={handleDeleteListing}
+              >
+                <Ionicons name="trash-outline" size={22} color="#FFF" />
+                <Text style={styles.contactBtnText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         ) : (
           <TouchableOpacity 

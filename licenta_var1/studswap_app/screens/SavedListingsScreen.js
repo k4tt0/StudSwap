@@ -18,7 +18,8 @@ export default function SavedListingsScreen({ navigation }) {
 
   const renderItem = ({ item }) => (
     <TouchableOpacity 
-      style={styles.listItem}
+      //style={styles.listItem}
+      style={[styles.listItem, item.status === 'sold' && { opacity: 0.6 }]}
       activeOpacity={0.7}
       onPress={() => navigation.navigate('ListingDetails', { listing: item })}
     >
@@ -28,6 +29,11 @@ export default function SavedListingsScreen({ navigation }) {
         ) : (
           <View style={[styles.itemImage, { justifyContent: 'center', alignItems: 'center' }]}>
             <MaterialCommunityIcons name="image-outline" size={30} color={colors.muted} />
+          </View>
+        )}
+        {item.status === 'sold' && (
+          <View style={{ position: 'absolute', top: 4, left: 4, backgroundColor: colors.muted, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}>
+            <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 11 }}>SOLD</Text>
           </View>
         )}
       </View>

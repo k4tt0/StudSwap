@@ -9,7 +9,12 @@ import { useHomeListings } from '../hooks/useHomeListings';
 const CATEGORIES = ['Books', 'Electronics', 'Equipment', 'Notes', 'Other'];
 const TYPES = ['For Sale', 'Donation', 'Exchange'];
 const CONDITIONS = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
-const UNIVERSITIES = ['Test University', 'UVT', 'Politehnica', 'Medicina', 'USVT'];
+const UNIVERSITIES = [
+  { label: 'UPT', value: 'Universitatea Politehnica Timișoara' },
+  { label: 'UMFT', value: 'Universitatea de Medicină și Farmacie Timișoara' },
+  { label: 'UVT', value: 'Universitatea de Vest Timișoara' },
+  { label: 'USVT', value: 'Universitatea de Științele Vieții "Regele Mihai I" din Timișoara' },
+];
 
 export default function HomeScreen({ navigation }) {
   const { colors } = useTheme(); 
@@ -25,6 +30,17 @@ export default function HomeScreen({ navigation }) {
   } = useHomeListings();
 
   const [isFilterVisible, setIsFilterVisible] = useState(false);
+
+  const getTypeTag = (type) => {
+    switch (type) {
+      case 'Donation':
+        return { label: 'Donation', bg: '#3B82F6' };   // blue
+      case 'Exchange':
+        return { label: 'Exchange', bg: '#A855F7' };    // purple
+      default:
+        return { label: 'For Sale', bg: colors.accent }; // your green
+    }
+  };
 
   const renderItem = ({ item }) => {
     const itemId = item.id || item._id; 
@@ -65,6 +81,19 @@ export default function HomeScreen({ navigation }) {
           ) : (
             <MaterialCommunityIcons name="image-outline" size={80} color={colors.muted} />
           )}
+
+          {(() => {
+            const tag = getTypeTag(item.announcementType);
+            return (
+              <View style={{ 
+                position: 'absolute', top: 10, left: 10, 
+                backgroundColor: tag.bg, 
+                paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 
+              }}>
+                <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 12 }}>{tag.label}</Text>
+              </View>
+            );
+          })()}
         </View>
 
         <View style={styles.cardFooter}>
@@ -95,11 +124,13 @@ export default function HomeScreen({ navigation }) {
       <Text style={{ fontWeight: 'bold', fontSize: 16, color: colors.textDark, marginBottom: 10 }}>{title}</Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
         {options.map(option => {
-          const isActive = filters[dataKey] === option;
+          const optionLabel = typeof option === 'string' ? option : option.label;
+          const optionValue = typeof option === 'string' ? option : option.value;
+          const isActive = filters[dataKey] === optionValue;
           return (
             <TouchableOpacity
-              key={option}
-              onPress={() => updateFilter(dataKey, option)}
+              key={optionValue}
+              onPress={() => updateFilter(dataKey, optionValue)}
               style={{
                 paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20,
                 backgroundColor: isActive ? colors.accent : colors.surface,
@@ -107,7 +138,7 @@ export default function HomeScreen({ navigation }) {
               }}
             >
               <Text style={{ color: isActive ? '#FFF' : colors.textDark, fontWeight: isActive ? 'bold' : 'normal' }}>
-                {option}
+                {optionLabel}
               </Text>
             </TouchableOpacity>
           )
@@ -165,10 +196,21 @@ export default function HomeScreen({ navigation }) {
           contentContainerStyle={[styles.feedContainer, { paddingBottom: 100 }]}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
-            <View style={{ justifyContent: 'center', alignItems: 'center', marginTop: 40 }}>
-              <MaterialCommunityIcons name="inbox-outline" size={80} color={colors.inputBorder} />
-              <Text style={{ marginTop: 16, color: colors.muted, fontSize: 16 }}>
-                No matching items found.
+            <View style={{ justifyContent: 'center', alignItems: 'center', marginTop: 60, paddingHorizontal: 40 }}>
+              <MaterialCommunityIcons 
+                name={searchQuery || filters.category || filters.announcementType || filters.condition || filters.faculty || filters.minPrice || filters.maxPrice ? "magnify-close" : "storefront-outline"} 
+                size={80} 
+                color={colors.inputBorder} 
+              />
+              <Text style={{ marginTop: 16, color: colors.textDark, fontSize: 18, fontWeight: 'bold', textAlign: 'center' }}>
+                {searchQuery || filters.category || filters.announcementType || filters.condition || filters.faculty || filters.minPrice || filters.maxPrice
+                  ? 'No matching items'
+                  : `No listings in ${userLocation} yet`}
+              </Text>
+              <Text style={{ marginTop: 8, color: colors.muted, fontSize: 14, textAlign: 'center', lineHeight: 20 }}>
+                {searchQuery || filters.category || filters.announcementType || filters.condition || filters.faculty || filters.minPrice || filters.maxPrice
+                  ? 'Try adjusting your search or filters.'
+                  : 'Be the first to post something for your university community!'}
               </Text>
             </View>
           }

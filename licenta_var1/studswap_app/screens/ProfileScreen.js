@@ -52,13 +52,20 @@ export default function ProfileScreen({ route, navigation }) {
       activeOpacity={0.9}
       onPress={() => navigation.navigate('ListingDetails', { listing: item })}
     >
-      {item.images && item.images.length > 0 ? (
-        <Image source={{ uri: item.images[0] }} style={styles.listingImage} />
-      ) : (
-        <View style={styles.listingImage}>
-          <MaterialCommunityIcons name="image-outline" size={40} color={colors.muted} />
-        </View>
-      )}
+      <View style={{ position: 'relative' }}>
+        {item.images && item.images.length > 0 ? (
+          <Image source={{ uri: item.images[0] }} style={styles.listingImage} />
+        ) : (
+          <View style={styles.listingImage}>
+            <MaterialCommunityIcons name="image-outline" size={40} color={colors.muted} />
+          </View>
+        )}
+        {item.status === 'sold' && (
+          <View style={{ position: 'absolute', top: 10, left: 10, backgroundColor: colors.muted, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 }}>
+            <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 12 }}>SOLD</Text>
+          </View>
+        )}
+      </View>
 
       <Text style={styles.listingTitle}>{item.title}</Text>
       <Text style={styles.listingDesc} numberOfLines={2}>

@@ -50,7 +50,7 @@ export const useListingDetails = (currentListing, navigation) => {
       try {
         setLoadingExtra(true);
 
-        // current user's city, so carousels only show same-city items
+        // current user's city
         const myUserId = await AsyncStorage.getItem('userId');
         let myCity = null;
         if (myUserId) {
@@ -77,6 +77,7 @@ export const useListingDetails = (currentListing, navigation) => {
           const similarItems = allListings.filter(item =>
             item.category === currentListing.category &&
             item.userId !== currentListing.userId &&
+            item.userId !== myUserId &&
             (item.id || item._id) !== thisId &&
             sameCity(item) &&
             notSold(item)
@@ -127,5 +128,40 @@ export const useListingDetails = (currentListing, navigation) => {
     ]);
   };
 
-  return { activeImageIndex, handleScroll, handleContactSeller, sellerListings, similarListings, loadingExtra, isViewerVisible, viewerIndex, openImageViewer, closeImageViewer, handleDeleteListing, seller };
+  const handleMarkAsSold = (currentStatusValue, onDone) => {
+    const isSold = currentStatusValue === 'sold';
+    const newStatus = isSold ? 'active' : 'sold';
+    const actionLabel = isSold ? 'mark as available' : 'mark as sold';
+
+    Alert.alert(
+      isSold ? 'Mark as Available' : 'Mark as Sold',
+      `Are you sure you want to ${actionLabel}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Confirm',
+          onPress: async () => {
+            try {
+              const id = currentListing.id || currentListing._id;
+              const res = await fetch(`${API_BASE_URL}/api/listings/${id}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus }),
+              });
+              if (res.ok) {
+                Alert.alert('Done', `Listing marked as ${newStatus === 'sold' ? 'sold' : 'available'}.`);
+                if (onDone) onDone(newStatus);
+              } else {
+                Alert.alert('Error', 'Could not update the listing status.');
+              }
+            } catch (error) {
+              Alert.alert('Error', 'Network error. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  return { activeImageIndex, handleScroll, handleContactSeller, sellerListings, similarListings, loadingExtra, isViewerVisible, viewerIndex, openImageViewer, closeImageViewer, handleDeleteListing, handleMarkAsSold, seller };
 };
