@@ -49,15 +49,42 @@ export const useListingDetails = (currentListing, navigation) => {
       if (!currentListing) return;
       try {
         setLoadingExtra(true);
+
+        // current user's city, so carousels only show same-city items
+        const myUserId = await AsyncStorage.getItem('userId');
+        let myCity = null;
+        if (myUserId) {
+          const userRes = await fetch(`${API_BASE_URL}/api/users/${myUserId}`);
+          if (userRes.ok) {
+            const userData = await userRes.json();
+            myCity = userData.city || null;
+          }
+        }
+
         const res = await fetch(`${API_BASE_URL}/api/listings`);
         if (res.ok) {
           const allListings = await res.json();
-          const sellerItems = allListings.filter(item => item.userId === currentListing.userId && (item.id || item._id) !== (currentListing.id || currentListing._id));
-          const similarItems = allListings.filter(item => item.category === currentListing.category && item.userId !== currentListing.userId && (item.id || item._id) !== (currentListing.id || currentListing._id));
+          const thisId = currentListing.id || currentListing._id;
+
+          const sameCity = (item) => !myCity || !item.location || item.location === myCity;
+          const notSold = (item) => item.status !== 'sold';
+
+          const sellerItems = allListings.filter(item =>
+            item.userId === currentListing.userId &&
+            (item.id || item._id) !== thisId &&
+            notSold(item)
+          );
+          const similarItems = allListings.filter(item =>
+            item.category === currentListing.category &&
+            item.userId !== currentListing.userId &&
+            (item.id || item._id) !== thisId &&
+            sameCity(item) &&
+            notSold(item)
+          );
           setSellerListings(sellerItems);
           setSimilarListings(similarItems);
         }
-      } catch (error) { console.error(error); } 
+      } catch (error) { console.error(error); }
       finally { setLoadingExtra(false); }
     };
     fetchExtraListings();

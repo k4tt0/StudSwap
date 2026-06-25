@@ -48,17 +48,39 @@ export const useHomeListings = () => {
   const loadListings = async () => {
     try {
       setLoading(true);
-      const myUserId = await AsyncStorage.getItem('userId'); 
+      const myUserId = await AsyncStorage.getItem('userId');
+
+      // get my city so I only see listings from my own city (spec requirement)
+      let myCity = null;
+      if (myUserId) {
+        const userRes = await fetch(`${API_BASE_URL}/api/users/${myUserId}`);
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          myCity = userData.city || null;
+        }
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/listings`);
       if (response.ok) {
         const listingsData = await response.json();
-        const othersListings = listingsData.filter(item => item.userId !== myUserId);
-        const sortedData = othersListings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const visible = listingsData.filter(item => {
+          if (item.userId === myUserId) return false;        // not my own
+          if (item.status === 'sold') return false;          // hide sold
+          if (myCity && item.location && item.location !== myCity) return false; // same city only
+          return true;
+        });
+        const sortedData = visible.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         setListings(sortedData);
         setFilteredListings(sortedData);
-      } else Alert.alert('Error', 'Failed to load listings');
-    } catch (error) { console.error('Error loading listings:', error); } 
-    finally { setLoading(false); }
+      } else {
+        Alert.alert('Error', 'Failed to load listings. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error loading listings:', error);
+      Alert.alert('Connection Error', 'Could not reach the server. Check your connection and try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleLike = async (itemId) => {

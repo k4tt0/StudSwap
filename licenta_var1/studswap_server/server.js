@@ -237,13 +237,19 @@ app.get('/api/users/:userId', async (req, res) => {
 
 app.put('/api/users/:userId', async (req, res) => {
   try {
-    const { profileImageUrl } = req.body;
-    
-    if (profileImageUrl) {
-      await db.collection('Users').doc(req.params.userId).update({
-        profileImageUrl: profileImageUrl
-      });
+    const { profileImageUrl, displayName } = req.body;
+
+    const updateData = {};
+    if (profileImageUrl) updateData.profileImageUrl = profileImageUrl;
+    if (typeof displayName === 'string' && displayName.trim().length > 0) {
+      updateData.displayName = displayName.trim();
     }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: "No valid fields to update." });
+    }
+
+    await db.collection('Users').doc(req.params.userId).update(updateData);
 
     res.status(200).json({ message: "User profile updated successfully!" });
   } catch (error) {

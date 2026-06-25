@@ -56,6 +56,18 @@ export default function SettingsScreen({ navigation }) {
         {/* ACCOUNT */}
         <Text style={styles.sectionLabel}>Account</Text>
         <View style={styles.card}>
+          <TouchableOpacity
+            style={[styles.row, styles.rowBorder]}
+            onPress={() => navigation.navigate('EditProfile')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.rowLeft}>
+              <Ionicons name="person-outline" size={22} color={colors.textDark} />
+              <Text style={styles.rowText}>Edit Profile</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.muted} />
+          </TouchableOpacity>
+
           {loading ? (
             <ActivityIndicator color={colors.accent} style={{ paddingVertical: 20 }} />
           ) : (
