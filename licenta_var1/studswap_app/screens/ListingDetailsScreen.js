@@ -6,9 +6,10 @@ import { useTheme } from '../context/ThemeContext';
 import { getListingDetailsStyles } from '../styles/ListingDetailsStyle';
 import { useListingDetails } from '../hooks/useListingDetails';
 import ImageView from "react-native-image-viewing";
-import { collection, addDoc, setDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { setDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { API_BASE_URL, db } from '../firebaseConfig';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ConfirmModal from '../components/ConfirmModal';
 
 const { width } = Dimensions.get('window');
 
@@ -16,8 +17,16 @@ export default function ListingDetailsScreen({ route, navigation }) {
   const { colors } = useTheme();
   const styles = getListingDetailsStyles(colors);
   const insets = useSafeAreaInsets();
-  
-  const { listing } = route.params; 
+
+  const [confirmVisible, setConfirmVisible] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState({
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    onConfirm: null,
+  });
+
+  const { listing } = route.params;
 
   const formatPostingDate = (isoString) => {
     if (!isoString) return null;
@@ -25,13 +34,23 @@ export default function ListingDetailsScreen({ route, navigation }) {
     if (isNaN(date)) return null;
     return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   };
+
   const postingDate = formatPostingDate(listing.createdAt);
-  
-  const { 
-    activeImageIndex, handleScroll, handleContactSeller,
-    sellerListings, similarListings, loadingExtra,
-    isViewerVisible, viewerIndex, openImageViewer, closeImageViewer,
-    handleDeleteListing, handleMarkAsSold, seller
+
+  const {
+    activeImageIndex,
+    handleScroll,
+    handleContactSeller,
+    sellerListings,
+    similarListings,
+    loadingExtra,
+    isViewerVisible,
+    viewerIndex,
+    openImageViewer,
+    closeImageViewer,
+    handleDeleteListing,
+    handleMarkAsSold,
+    seller,
   } = useListingDetails(listing, navigation);
 
   const [isLiked, setIsLiked] = useState(false);
@@ -44,7 +63,7 @@ export default function ListingDetailsScreen({ route, navigation }) {
         const id = await AsyncStorage.getItem('userId');
         setCurrentUserId(id);
       } catch (error) {
-        console.error("Eroare la citirea userId-ului curent:", error);
+        console.error('Error reading current userId:', error);
       }
     };
     fetchCurrentUserId();
@@ -60,12 +79,12 @@ export default function ListingDetailsScreen({ route, navigation }) {
         const savedIdsStr = await AsyncStorage.getItem(storageKey);
         const savedIds = savedIdsStr ? JSON.parse(savedIdsStr) : [];
         const itemId = listing.id || listing._id;
-        
+
         if (savedIds.includes(itemId)) {
           setIsLiked(true);
         }
       } catch (error) {
-        console.error("Eroare la citirea favoritelor:", error);
+        console.error('Error reading the favourites:', error);
       }
     };
     checkLikeStatus();
@@ -76,7 +95,7 @@ export default function ListingDetailsScreen({ route, navigation }) {
       const myUserId = await AsyncStorage.getItem('userId');
       const storageKey = `savedListings_${myUserId}`;
       const itemId = listing.id || listing._id;
-      
+
       const savedIdsStr = await AsyncStorage.getItem(storageKey);
       let savedIds = savedIdsStr ? JSON.parse(savedIdsStr) : [];
 
@@ -89,9 +108,9 @@ export default function ListingDetailsScreen({ route, navigation }) {
 
         if (listing.userId !== myUserId) {
           try {
-            const userRes = await fetch(`${API_BASE_URL}/api/users/${myUserId}`); 
+            const userRes = await fetch(`${API_BASE_URL}/api/users/${myUserId}`);
             let senderName = 'Someone';
-            
+
             if (userRes.ok) {
               const userData = await userRes.json();
               senderName = userData.displayName || 'Someone';
@@ -106,22 +125,48 @@ export default function ListingDetailsScreen({ route, navigation }) {
               type: 'like',
               text: `${senderName} saved your listing "${listing.title}".`,
               isRead: false,
-              timestamp: serverTimestamp()
+              timestamp: serverTimestamp(),
             });
-          } catch(e) {
-            console.error("Error sending notification:", e);
+          } catch (e) {
+            console.error('Error sending notification:', e);
           }
         }
       }
       await AsyncStorage.setItem(storageKey, JSON.stringify(savedIds));
     } catch (error) {
-      console.error("Error saving favourite item:", error);
+      console.error('Error saving favourite item:', error);
     }
-  }
+  };
+
+  const openConfirm = ({ title, message, confirmText = 'Confirm', onConfirm }) => {
+    setConfirmConfig({
+      title,
+      message,
+      confirmText,
+      onConfirm,
+    });
+    setConfirmVisible(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await handleDeleteListing();
+    } finally {
+      setConfirmVisible(false);
+    }
+  };
+
+  const handleConfirmMarkAsSold = async () => {
+    try {
+      await handleMarkAsSold(currentStatus, (newStatus) => setCurrentStatus(newStatus));
+    } finally {
+      setConfirmVisible(false);
+    }
+  };
 
   const renderMiniCard = (item) => (
-    <TouchableOpacity 
-      key={item.id} 
+    <TouchableOpacity
+      key={item.id}
       style={styles.miniCard}
       onPress={() => navigation.push('ListingDetails', { listing: item })}
     >
@@ -137,9 +182,11 @@ export default function ListingDetailsScreen({ route, navigation }) {
       <View style={styles.miniCardInfo}>
         <Text style={styles.miniCardTitle} numberOfLines={1}>{item.title}</Text>
         <Text style={styles.miniCardPrice}>
-          {item.announcementType === 'Donation' ? 'Free' : 
-           item.announcementType === 'Exchange' ? 'Exchange' : 
-           `${item.price} RON`}
+          {item.announcementType === 'Donation'
+            ? 'Free'
+            : item.announcementType === 'Exchange'
+              ? 'Exchange'
+              : `${item.price} RON`}
         </Text>
       </View>
     </TouchableOpacity>
@@ -147,9 +194,8 @@ export default function ListingDetailsScreen({ route, navigation }) {
 
   return (
     <View style={styles.container}>
-      
       <View style={{ position: 'absolute', top: insets.top + 10, left: 20, zIndex: 10 }}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={{ backgroundColor: 'rgba(0,0,0,0.5)', padding: 10, borderRadius: 20 }}
           onPress={() => navigation.goBack()}
         >
@@ -158,8 +204,6 @@ export default function ListingDetailsScreen({ route, navigation }) {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        
-        {/* CARUSEL IMAGINI */}
         <View style={styles.imageCarouselContainer}>
           {listing.images && listing.images.length > 0 ? (
             <ScrollView
@@ -170,9 +214,9 @@ export default function ListingDetailsScreen({ route, navigation }) {
               scrollEventThrottle={16}
             >
               {listing.images.map((imgUri, index) => (
-                <TouchableOpacity 
-                  key={index} 
-                  activeOpacity={0.9} 
+                <TouchableOpacity
+                  key={index}
+                  activeOpacity={0.9}
                   onPress={() => openImageViewer(index)}
                 >
                   <Image source={{ uri: imgUri }} style={styles.image} />
@@ -193,20 +237,20 @@ export default function ListingDetailsScreen({ route, navigation }) {
           )}
         </View>
 
-        {/* INFORMAȚII ANUNȚ */}
         <View style={styles.contentContainer}>
-          
           <View style={styles.headerRow}>
-            <Text style={[styles.title, { flex: 1, fontSize: 24, fontWeight: 'bold', color: colors.textDark }]}>{listing.title}</Text>
-            
+            <Text style={[styles.title, { flex: 1, fontSize: 24, fontWeight: 'bold', color: colors.textDark }]}>
+              {listing.title}
+            </Text>
+
             {currentUserId !== listing.userId && (
               <TouchableOpacity onPress={toggleLike}>
-                <MaterialCommunityIcons 
-                  name={isLiked ? "heart" : "heart-outline"} 
-                  size={30} 
-                  color={colors.accent} 
+                <MaterialCommunityIcons
+                  name={isLiked ? 'heart' : 'heart-outline'}
+                  size={30}
+                  color={colors.accent}
                 />
-              </TouchableOpacity>           
+              </TouchableOpacity>
             )}
           </View>
 
@@ -217,9 +261,11 @@ export default function ListingDetailsScreen({ route, navigation }) {
           )}
 
           <Text style={styles.price}>
-            {listing.announcementType === 'Donation' ? 'Free / Donation' : 
-             listing.announcementType === 'Exchange' ? 'For Exchange' : 
-             `${listing.price} RON`}
+            {listing.announcementType === 'Donation'
+              ? 'Free / Donation'
+              : listing.announcementType === 'Exchange'
+                ? 'For Exchange'
+                : `${listing.price} RON`}
           </Text>
 
           <View style={styles.divider} />
@@ -247,8 +293,8 @@ export default function ListingDetailsScreen({ route, navigation }) {
           <View style={styles.divider} />
 
           <Text style={styles.sectionTitle}>Seller</Text>
-          <TouchableOpacity 
-            style={styles.sellerCard} 
+          <TouchableOpacity
+            style={styles.sellerCard}
             onPress={() => navigation.navigate('Profile', { userId: seller._id, fromListing: true })}
           >
             <View style={styles.sellerTextContainer}>
@@ -256,7 +302,7 @@ export default function ListingDetailsScreen({ route, navigation }) {
               <Text style={styles.sellerName}>{seller.name}</Text>
               <Text style={styles.sellerUniversity}>{seller.university}</Text>
             </View>
-            
+
             <View style={styles.sellerAvatarContainer}>
               {seller.avatar ? (
                 <Image source={{ uri: seller.avatar }} style={styles.sellerAvatar} />
@@ -270,7 +316,6 @@ export default function ListingDetailsScreen({ route, navigation }) {
             </View>
           </TouchableOpacity>
 
-          {/* CARUSELE */}
           {loadingExtra ? (
             <ActivityIndicator size="small" color={colors.accent} style={{ marginTop: 30 }} />
           ) : (
@@ -293,21 +338,30 @@ export default function ListingDetailsScreen({ route, navigation }) {
               )}
             </>
           )}
-
         </View>
       </ScrollView>
 
       <View style={styles.footer}>
         {currentUserId === listing.userId ? (
           <View style={{ width: '100%', gap: 10 }}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.contactBtn, { backgroundColor: currentStatus === 'sold' ? colors.muted : colors.accent }]}
-              onPress={() => handleMarkAsSold(currentStatus, (newStatus) => setCurrentStatus(newStatus))}
+              onPress={() =>
+                openConfirm({
+                  title: currentStatus === 'sold' ? 'Mark as Available' : 'Mark as Sold',
+                  message:
+                    currentStatus === 'sold'
+                      ? 'Are you sure you want to mark this listing as available?'
+                      : 'Are you sure you want to mark this listing as sold?',
+                  confirmText: 'Confirm',
+                  onConfirm: handleConfirmMarkAsSold,
+                })
+              }
             >
-              <Ionicons 
-                name={currentStatus === 'sold' ? 'refresh-outline' : 'checkmark-circle-outline'} 
-                size={22} 
-                color="#FFF" 
+              <Ionicons
+                name={currentStatus === 'sold' ? 'refresh-outline' : 'checkmark-circle-outline'}
+                size={22}
+                color="#FFF"
               />
               <Text style={styles.contactBtnText}>
                 {currentStatus === 'sold' ? 'Mark as Available' : 'Mark as Sold'}
@@ -315,17 +369,24 @@ export default function ListingDetailsScreen({ route, navigation }) {
             </TouchableOpacity>
 
             <View style={{ flexDirection: 'row', width: '100%', gap: 15 }}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.contactBtn, { flex: 1, backgroundColor: colors.muted }]}
                 onPress={() => navigation.navigate('EditListing', { listing: listing })}
               >
                 <Ionicons name="create-outline" size={22} color="#FFF" />
                 <Text style={styles.contactBtnText}>Edit</Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity 
+
+              <TouchableOpacity
                 style={[styles.contactBtn, { flex: 1, backgroundColor: '#E63946' }]}
-                onPress={handleDeleteListing}
+                onPress={() =>
+                  openConfirm({
+                    title: 'Delete Listing',
+                    message: 'Are you sure you want to delete this listing?',
+                    confirmText: 'Delete',
+                    onConfirm: handleConfirmDelete,
+                  })
+                }
               >
                 <Ionicons name="trash-outline" size={22} color="#FFF" />
                 <Text style={styles.contactBtnText}>Delete</Text>
@@ -333,7 +394,7 @@ export default function ListingDetailsScreen({ route, navigation }) {
             </View>
           </View>
         ) : (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.contactBtn}
             onPress={() => handleContactSeller(listing.userId, listing.userName)}
           >
@@ -351,7 +412,17 @@ export default function ListingDetailsScreen({ route, navigation }) {
         swipeToCloseEnabled={true}
         doubleTapToZoomEnabled={true}
       />
-      
+
+      <ConfirmModal
+        visible={confirmVisible}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        confirmText={confirmConfig.confirmText}
+        cancelText="Cancel"
+        colors={colors}
+        onCancel={() => setConfirmVisible(false)}
+        onConfirm={confirmConfig.onConfirm}
+      />
     </View>
   );
 }

@@ -14,7 +14,7 @@ export const useProfile = (navigation, providedUserId) => {
   useFocusEffect(
     useCallback(() => {
       fetchProfileData();
-    }, [providedUserId]) 
+    }, [providedUserId])
   );
 
   const fetchProfileData = async () => {
@@ -22,7 +22,7 @@ export const useProfile = (navigation, providedUserId) => {
     try {
       const myUserId = await AsyncStorage.getItem('userId');
       const targetUserId = providedUserId || myUserId;
-      
+
       setIsOwnProfile(myUserId === targetUserId);
 
       const userRes = await fetch(`${API_BASE_URL}/api/users/${targetUserId}`);
@@ -34,7 +34,7 @@ export const useProfile = (navigation, providedUserId) => {
           email: userData.email || '',
           city: userData.city || 'Unknown Location',
           university: userData.university || 'University',
-          avatar: userData.profileImageUrl || null
+          avatar: userData.profileImageUrl || null,
         });
       }
 
@@ -56,20 +56,22 @@ export const useProfile = (navigation, providedUserId) => {
 
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') return Alert.alert('Permission needed', 'Please allow access to your photos.');
+      if (status !== 'granted') {
+        return Alert.alert('Permission needed', 'Please allow access to your photos.');
+      }
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
         allowsEditing: true,
-        aspect: [1, 1], 
+        aspect: [1, 1],
         quality: 0.5,
       });
 
       if (!result.canceled && result.assets) {
         const imageUri = result.assets[0].uri;
-        
+
         setUserProfile(prev => ({ ...prev, avatar: imageUri }));
-        
+
         const formData = new FormData();
         formData.append('images', {
           uri: imageUri,
@@ -84,26 +86,23 @@ export const useProfile = (navigation, providedUserId) => {
         await fetch(`${API_BASE_URL}/api/users/${userProfile.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ profileImageUrl: finalImageUrl })
+          body: JSON.stringify({ profileImageUrl: finalImageUrl }),
         });
       }
     } catch (error) {
-      console.error("Eroare la alegerea/salvarea pozei", error);
+      console.error('Eroare la alegerea/salvarea pozei', error);
     }
   };
 
-  const handleDeleteListing = (listingId) => {
-    Alert.alert("Delete Listing", "Are you sure you want to permanently delete this listing?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: async () => {
-          try {
-            const res = await fetch(`${API_BASE_URL}/api/listings/${listingId}`, { method: 'DELETE' });
-            if (res.ok) {
-              setMyListings(prev => prev.filter(item => (item.id || item._id) !== listingId));
-            } else Alert.alert("Error", "Failed to delete listing.");
-          } catch (error) { Alert.alert("Error", "Network error."); }
-      }}
-    ]);
+  const handleDeleteListing = async (listingId) => {
+    const res = await fetch(`${API_BASE_URL}/api/listings/${listingId}`, { method: 'DELETE' });
+
+    if (res.ok) {
+      setMyListings(prev => prev.filter(item => (item.id || item._id) !== listingId));
+      return;
+    }
+
+    throw new Error('Failed to delete listing.');
   };
 
   return { userProfile, myListings, loading, isOwnProfile, handlePickAvatar, handleDeleteListing };

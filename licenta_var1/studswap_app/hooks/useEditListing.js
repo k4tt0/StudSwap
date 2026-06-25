@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Alert } from 'react-native';
 import { API_BASE_URL } from '../firebaseConfig';
 
 export const useEditListing = (listing, navigation) => {
@@ -13,18 +12,20 @@ export const useEditListing = (listing, navigation) => {
   
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const handleUpdate = async () => {
+   const handleUpdate = async () => {
     if (!title.trim() || !category || !announcementType || !condition) {
-      Alert.alert('Missing fields', 'Please fill in all mandatory fields.');
-      return;
+      return {
+        type: 'error',
+        title: 'Missing fields',
+        message: 'Please fill in all mandatory fields.',
+      };
     }
 
     setIsUpdating(true);
     try {
       const listingId = listing.id || listing._id;
-      
       const finalPrice = announcementType === 'For Sale' ? Number(price) : 0;
-      
+
       const response = await fetch(`${API_BASE_URL}/api/listings/${listingId}`, {
         method: 'PUT',
         headers: {
@@ -36,34 +37,52 @@ export const useEditListing = (listing, navigation) => {
           description,
           category,
           announcementType,
-          condition
+          condition,
         }),
       });
 
       if (response.ok) {
-        Alert.alert('Success', 'Listing updated successfully!');
-        navigation.navigate('Profile'); 
-      } else {
-        const errorData = await response.json();
-        console.error("Server update error:", errorData);
-        Alert.alert('Error', errorData.message || 'Failed to update listing.');
+        return {
+          type: 'success',
+          title: 'Success',
+          message: 'Listing updated successfully!',
+          redirect: true,
+        };
       }
+
+      const errorData = await response.json();
+      console.error('Server update error:', errorData);
+      return {
+        type: 'error',
+        title: 'Error',
+        message: errorData.message || 'Failed to update listing.',
+      };
     } catch (error) {
-      console.error("Network error on update:", error);
-      Alert.alert('Error', 'Network error while updating.');
+      console.error('Network error on update:', error);
+      return {
+        type: 'error',
+        title: 'Error',
+        message: 'Network error while updating.',
+      };
     } finally {
       setIsUpdating(false);
     }
   };
 
   return {
-    title, setTitle,
-    price, setPrice,
-    description, setDescription,
-    category, setCategory,
-    announcementType, setAnnouncementType,
-    condition, setCondition,
+    title,
+    setTitle,
+    price,
+    setPrice,
+    description,
+    setDescription,
+    category,
+    setCategory,
+    announcementType,
+    setAnnouncementType,
+    condition,
+    setCondition,
     isUpdating,
-    handleUpdate
+    handleUpdate,
   };
 };

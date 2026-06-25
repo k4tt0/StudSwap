@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from '../firebaseConfig';
 
@@ -30,24 +29,15 @@ export const useSettings = (navigation) => {
     loadAccount();
   }, []);
 
-  const handleLogout = () => {
-    Alert.alert('Log Out', 'Are you sure you want to log out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Log Out',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await AsyncStorage.removeItem('userId');
-            await AsyncStorage.removeItem('userToken');
-            await AsyncStorage.removeItem('rememberUser');
-            navigation.reset({ index: 0, routes: [{ name: 'Start' }] });
-          } catch (e) {
-            Alert.alert('Error', 'Could not log out. Please try again.');
-          }
-        },
-      },
-    ]);
+ const handleLogout = async (navigation) => {
+    try {
+      await AsyncStorage.removeItem('userId');
+      await AsyncStorage.removeItem('userToken');
+      await AsyncStorage.removeItem('rememberUser');
+      navigation.reset({ index: 0, routes: [{ name: 'Start' }] });
+    } catch (e) {
+      throw e;
+    }
   };
 
   return { account, loading, handleLogout };

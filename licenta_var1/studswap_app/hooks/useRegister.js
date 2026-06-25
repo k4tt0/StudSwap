@@ -1,9 +1,8 @@
-import { useState } from 'react';
-import { Alert } from 'react-native';
+import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from '../firebaseConfig';
 
-export const useRegister = (navigation) => {
+export const useRegister = () => {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -11,15 +10,43 @@ export const useRegister = (navigation) => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState('');
+
+  useEffect(() => {
+    const checkUsername = async () => {
+      if (displayName.trim().length < 3) {
+        setUsernameStatus('');
+        return;
+      }
+      
+      setUsernameStatus('checking');
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/auth/check-username?username=${encodeURIComponent(displayName.trim())}`);
+        if (response.ok) {
+          const data = await response.json();
+          setUsernameStatus(data.available ? 'available' : 'taken');
+        }
+      } catch (error) {
+        setUsernameStatus(''); 
+      }
+    };
+
+    const delayDebounceFn = setTimeout(() => {
+      checkUsername();
+    }, 250);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [displayName]);
 
   const handleRegister = async () => {
     if (!email || !password || !displayName || !confirmPassword) {
-      Alert.alert("Error", "Please fill in all fields.");
-      return;
+      return { type: 'error', title: 'Error', message: 'Please fill in all fields.' };
     }
     if (password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match.");
-      return;
+      return { type: 'error', title: 'Error', message: 'Passwords do not match.' };
+    }
+    if (usernameStatus === 'taken') {
+      return { type: 'error', title: 'Invalid Username', message: 'Please choose a different username.' };
     }
 
     setLoading(true);
@@ -38,33 +65,32 @@ export const useRegister = (navigation) => {
 
       if (response.ok) {
         await AsyncStorage.setItem('userId', data.userId);
-      //  navigation.navigate('VerifyEmail'); 
-        navigation.replace('Home');
+        return { 
+          type: 'success', 
+          title: 'Welcome!', 
+          message: 'Account created successfully!', 
+          redirect: true 
+        };
       } else {
-        Alert.alert("Registration Failed", data.error || "Something went wrong");
+        return { type: 'error', title: 'Registration Failed', message: data.error || 'Something went wrong.' };
       }
     } catch (error) {
       console.error("Registration Error:", error);
-      Alert.alert("Network Error", "Could not connect to the server.");
+      return { type: 'error', title: 'Network Error', message: 'Could not connect to the server.' };
     } finally {
       setLoading(false);
     }
   };
 
   return {
-    displayName,
-    setDisplayName,
-    email,
-    setEmail,
-    password,
-    setPassword,
-    confirmPassword,
-    setConfirmPassword,
+    displayName, setDisplayName,
+    email, setEmail,
+    password, setPassword,
+    confirmPassword, setConfirmPassword,
     loading,
-    showPassword,
-    setShowPassword,
-    showConfirmPassword,
-    setShowConfirmPassword,
+    showPassword, setShowPassword,
+    showConfirmPassword, setShowConfirmPassword,
+    usernameStatus,
     handleRegister
   };
 };

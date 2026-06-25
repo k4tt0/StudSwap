@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Alert } from 'react-native';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { API_BASE_URL, db } from '../firebaseConfig'; 
 
@@ -110,57 +109,37 @@ export const useListingDetails = (currentListing, navigation) => {
     } catch (error) { console.error(error); }
   };
 
-  const handleDeleteListing = () => {
-    Alert.alert("Delete Listing", "Are you sure you want to delete this listing?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: async () => {
-          try {
-            const idToDelete = currentListing.id || currentListing._id;
-            const res = await fetch(`${API_BASE_URL}/api/listings/${idToDelete}`, { method: 'DELETE' });
-            if (res.ok) {
-              Alert.alert("Deleted", "Your listing has been removed.");
-              navigation.navigate('Profile'); 
-            } else {
-              Alert.alert("Error", "Failed to delete.");
-            }
-          } catch (error) { Alert.alert("Error", "Network error."); }
-      }}
-    ]);
+
+  const handleDeleteListing = async () => {
+    try {
+      const idToDelete = currentListing.id || currentListing._id;
+              const res = await fetch(`${API_BASE_URL}/api/listings/${idToDelete}`, { method: 'DELETE' });
+      if (res.ok) {
+        navigation.navigate('Profile');
+      } else {
+        throw new Error('Failed to delete listing.');
+      }
+    } catch (error) {
+      throw error;
+    }
   };
 
-  const handleMarkAsSold = (currentStatusValue, onDone) => {
+  const handleMarkAsSold = async (currentStatusValue, onDone) => {
     const isSold = currentStatusValue === 'sold';
     const newStatus = isSold ? 'active' : 'sold';
-    const actionLabel = isSold ? 'mark as available' : 'mark as sold';
 
-    Alert.alert(
-      isSold ? 'Mark as Available' : 'Mark as Sold',
-      `Are you sure you want to ${actionLabel}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Confirm',
-          onPress: async () => {
-            try {
-              const id = currentListing.id || currentListing._id;
-              const res = await fetch(`${API_BASE_URL}/api/listings/${id}/status`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: newStatus }),
-              });
-              if (res.ok) {
-                Alert.alert('Done', `Listing marked as ${newStatus === 'sold' ? 'sold' : 'available'}.`);
-                if (onDone) onDone(newStatus);
-              } else {
-                Alert.alert('Error', 'Could not update the listing status.');
-              }
-            } catch (error) {
-              Alert.alert('Error', 'Network error. Please try again.');
-            }
-          },
-        },
-      ]
-    );
+    const id = currentListing.id || currentListing._id;
+    const res = await fetch(`${API_BASE_URL}/api/listings/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus }),
+    });
+
+    if (res.ok) {
+      if (onDone) onDone(newStatus);
+    } else {
+      throw new Error('Could not update the listing status.');
+    }
   };
 
   return { activeImageIndex, handleScroll, handleContactSeller, sellerListings, similarListings, loadingExtra, isViewerVisible, viewerIndex, openImageViewer, closeImageViewer, handleDeleteListing, handleMarkAsSold, seller };

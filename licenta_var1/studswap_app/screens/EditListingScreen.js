@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,6 +6,7 @@ import { useTheme } from '../context/ThemeContext';
 import { getEditListingStyles } from '../styles/EditListingStyle';
 import { useEditListing } from '../hooks/useEditListing';
 import PillSelector from '../components/PillSelector';
+import InfoModal from '../components/InfoModal';
 
 const CATEGORIES = ['Books', 'Electronics', 'Equipment', 'Notes', 'Other'];
 const TYPES = ['For Sale', 'Donation', 'Exchange'];
@@ -25,12 +26,47 @@ export default function EditListingScreen({ route, navigation }) {
     announcementType, setAnnouncementType,
     condition, setCondition,
     isUpdating,
-    handleUpdate
+    handleUpdate,
   } = useEditListing(listing, navigation);
 
+  const [infoVisible, setInfoVisible] = useState(false);
+  const [infoConfig, setInfoConfig] = useState({
+    title: '',
+    message: '',
+    buttonText: 'OK',
+  });
+
+  const showInfo = (config) => {
+    setInfoConfig({
+      title: config.title,
+      message: config.message,
+      buttonText: config.buttonText || 'OK',
+    });
+    setInfoVisible(true);
+  };
+
+  const onSavePress = async () => {
+    const result = await handleUpdate();
+
+    if (!result) return;
+
+    showInfo({
+      title: result.title,
+      message: result.message,
+      buttonText: 'OK',
+    });
+
+    if (result.type === 'success' && result.redirect) {
+      setTimeout(() => {
+        setInfoVisible(false);
+        navigation.navigate('Profile');
+      }, 800);
+    }
+  };
+
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
+    <KeyboardAvoidingView
+      style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
@@ -42,7 +78,6 @@ export default function EditListingScreen({ route, navigation }) {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        
         <Text style={styles.inputLabel}>Title</Text>
         <TextInput
           style={styles.input}
@@ -99,13 +134,12 @@ export default function EditListingScreen({ route, navigation }) {
           placeholder="Describe your item..."
           placeholderTextColor={colors.muted}
         />
-
       </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.updateBtn}
-          onPress={handleUpdate}
+          onPress={onSavePress}
           disabled={isUpdating}
         >
           {isUpdating ? (
@@ -115,6 +149,15 @@ export default function EditListingScreen({ route, navigation }) {
           )}
         </TouchableOpacity>
       </View>
+
+      <InfoModal
+        visible={infoVisible}
+        title={infoConfig.title}
+        message={infoConfig.message}
+        buttonText={infoConfig.buttonText}
+        colors={colors}
+        onClose={() => setInfoVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 }

@@ -1,10 +1,11 @@
-import React from 'react';
+import React, {useState} from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { getSettingsStyles } from '../styles/SettingsScreenStyle';
 import { useSettings } from '../hooks/useSettings';
+import ConfirmModal from '../components/ConfirmModal';
 
 const APP_VERSION = '1.0.0';
 
@@ -19,6 +20,16 @@ export default function SettingsScreen({ navigation }) {
   const styles = getSettingsStyles(colors);
   const insets = useSafeAreaInsets();
   const { account, loading, handleLogout } = useSettings(navigation);
+  const [logoutVisible, setLogoutVisible] = useState(false);
+
+  const confirmLogout = async () => {
+    try {
+      await handleLogout(navigation);
+      setLogoutVisible(false);
+    } catch (error) {
+      setLogoutVisible(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -100,14 +111,28 @@ export default function SettingsScreen({ navigation }) {
         </View>
 
         {/* LOGOUT */}
-        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.8}>
+        <TouchableOpacity
+          style={styles.logoutBtn}
+          onPress={() => setLogoutVisible(true)}
+          activeOpacity={0.8}
+        >
           <Ionicons name="log-out-outline" size={22} color="#E63946" />
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
 
         <Text style={styles.footerNote}>StudSwap • {APP_VERSION}</Text>
-
       </ScrollView>
+
+      <ConfirmModal
+        visible={logoutVisible}
+        title="Log Out"
+        message="Are you sure you want to log out?"
+        confirmText="Log Out"
+        cancelText="Cancel"
+        colors={colors}
+        onCancel={() => setLogoutVisible(false)}
+        onConfirm={confirmLogout}
+      />
     </View>
   );
 }

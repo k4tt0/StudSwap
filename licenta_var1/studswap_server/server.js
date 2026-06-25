@@ -67,6 +67,12 @@ app.post('/api/auth/register', async (req, res) => {
     const uniData = uniSnapshot.docs[0].data();
     const assignedCity = uniData.city;
 
+    // ver if name already taken b4 creating cont
+    const usernameSnapshot = await db.collection('Users').where('displayName', '==', displayName.trim()).get();
+    if (!usernameSnapshot.empty) {
+      return res.status(400).json({ error: "This username is already taken." });
+    }
+
     // create the user in firebase auth
     const userRecord = await auth.createUser({
       email: email,
@@ -123,6 +129,24 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
+// --- USERNAME VERIF
+app.get('/api/auth/check-username', async (req, res) => {
+  try {
+    const { username } = req.query;
+    if (!username) return res.status(400).json({ error: "Username required" });
+
+    const snapshot = await db.collection('Users').where('displayName', '==', username.trim()).get();
+    
+    if (!snapshot.empty) {
+      return res.json({ available: false }); 
+    }
+    
+    res.json({ available: true }); 
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // --- status email verification
 
 app.get('/api/auth/check-verification/:userId', async (req, res) => {
@@ -133,6 +157,8 @@ app.get('/api/auth/check-verification/:userId', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// --- LOGIN
 
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
@@ -238,11 +264,21 @@ app.get('/api/users/:userId', async (req, res) => {
 app.put('/api/users/:userId', async (req, res) => {
   try {
     const { profileImageUrl, displayName } = req.body;
-
     const updateData = {};
+    
     if (profileImageUrl) updateData.profileImageUrl = profileImageUrl;
+    
     if (typeof displayName === 'string' && displayName.trim().length > 0) {
-      updateData.displayName = displayName.trim();
+      const newName = displayName.trim();
+      
+      const usernameSnapshot = await db.collection('Users').where('displayName', '==', newName).get();
+      const isTakenByOther = usernameSnapshot.docs.some(doc => doc.id !== req.params.userId);
+      
+      if (isTakenByOther) {
+        return res.status(400).json({ error: "This username is already taken." });
+      }
+      
+      updateData.displayName = newName;
     }
 
     if (Object.keys(updateData).length === 0) {
@@ -250,7 +286,6 @@ app.put('/api/users/:userId', async (req, res) => {
     }
 
     await db.collection('Users').doc(req.params.userId).update(updateData);
-
     res.status(200).json({ message: "User profile updated successfully!" });
   } catch (error) {
     console.error("Update User Error:", error);
