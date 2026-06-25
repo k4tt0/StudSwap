@@ -6,8 +6,8 @@ import { useTheme } from '../context/ThemeContext';
 import { getListingDetailsStyles } from '../styles/ListingDetailsStyle';
 import { useListingDetails } from '../hooks/useListingDetails';
 import ImageView from "react-native-image-viewing";
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
+import { collection, addDoc, setDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { API_BASE_URL, db } from '../firebaseConfig';
 
 const { width } = Dimensions.get('window');
 
@@ -16,12 +16,20 @@ export default function ListingDetailsScreen({ route, navigation }) {
   const styles = getListingDetailsStyles(colors);
   
   const { listing } = route.params; 
+
+  const formatPostingDate = (isoString) => {
+    if (!isoString) return null;
+    const date = new Date(isoString);
+    if (isNaN(date)) return null;
+    return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+  const postingDate = formatPostingDate(listing.createdAt);
   
   const { 
     activeImageIndex, handleScroll, handleContactSeller,
     sellerListings, similarListings, loadingExtra,
     isViewerVisible, viewerIndex, openImageViewer, closeImageViewer,
-    handleDeleteListing
+    handleDeleteListing, seller
   } = useListingDetails(listing, navigation);
 
   const [isLiked, setIsLiked] = useState(false);
@@ -76,10 +84,8 @@ export default function ListingDetailsScreen({ route, navigation }) {
         savedIds.push(itemId);
         setIsLiked(true);
 
-        // Dacă nu este anunțul nostru, trimitem notificare
         if (listing.userId !== myUserId) {
           try {
-            // CORECT: Folosim API_BASE_URL
             const userRes = await fetch(`${API_BASE_URL}/api/users/${myUserId}`); 
             let senderName = 'Someone';
             
@@ -88,7 +94,8 @@ export default function ListingDetailsScreen({ route, navigation }) {
               senderName = userData.displayName || 'Someone';
             }
 
-            await addDoc(collection(db, 'Notifications'), {
+            const notifId = `like_${myUserId}_${itemId}`;
+            await setDoc(doc(db, 'Notifications', notifId), {
               receiverId: listing.userId,
               senderId: myUserId,
               senderName: senderName,
@@ -187,7 +194,7 @@ export default function ListingDetailsScreen({ route, navigation }) {
         <View style={styles.contentContainer}>
           
           <View style={styles.headerRow}>
-            <Text style={styles.title} style={{ flex: 1, fontSize: 24, fontWeight: 'bold', color: colors.textDark }}>{listing.title}</Text>
+            <Text style={[styles.title, { flex: 1, fontSize: 24, fontWeight: 'bold', color: colors.textDark }]}>{listing.title}</Text>
             
             {currentUserId !== listing.userId && (
               <TouchableOpacity onPress={toggleLike}>
@@ -216,6 +223,12 @@ export default function ListingDetailsScreen({ route, navigation }) {
             <MaterialCommunityIcons name="star-circle-outline" size={24} color={colors.textDark} />
             <Text style={styles.metaText}>{listing.condition}</Text>
           </View>
+          {postingDate && (
+            <View style={styles.metaRow}>
+              <MaterialCommunityIcons name="calendar-outline" size={24} color={colors.textDark} />
+              <Text style={styles.metaText}>Posted {postingDate}</Text>
+            </View>
+          )}
 
           <View style={styles.divider} />
 
@@ -225,17 +238,28 @@ export default function ListingDetailsScreen({ route, navigation }) {
           <View style={styles.divider} />
 
           <Text style={styles.sectionTitle}>Seller</Text>
-          <View style={styles.sellerContainer}>
-            <View style={styles.sellerAvatar}>
-              <Text style={styles.sellerInitials}>{listing.userName?.charAt(0) || 'U'}</Text>
+          <TouchableOpacity 
+            style={styles.sellerCard} 
+            onPress={() => navigation.navigate('Profile', { userId: seller._id })}
+          >
+            <View style={styles.sellerTextContainer}>
+              <Text style={styles.sellerLabel}>Listed by</Text>
+              <Text style={styles.sellerName}>{seller.name}</Text>
+              <Text style={styles.sellerUniversity}>{seller.university}</Text>
             </View>
-            <View>
-              <Text style={styles.sellerName}>{listing.userName}</Text>
-              <Text style={{ color: colors.muted, fontSize: 12 }}>
-                {listing.location} • {listing.faculty || 'University'}
-              </Text>
+            
+            <View style={styles.sellerAvatarContainer}>
+              {seller.avatar ? (
+                <Image source={{ uri: seller.avatar }} style={styles.sellerAvatar} />
+              ) : (
+                <View style={styles.sellerAvatarPlaceholder}>
+                  <Text style={styles.sellerAvatarInitials}>
+                    {seller.name ? seller.name.charAt(0) : '?'}
+                  </Text>
+                </View>
+              )}
             </View>
-          </View>
+          </TouchableOpacity>
 
           {/* CARUSELE */}
           {loadingExtra ? (

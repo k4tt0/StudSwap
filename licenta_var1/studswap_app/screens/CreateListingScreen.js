@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Image, FlatList, Modal, Keyboard } from 'react-native';
+import React from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Image, FlatList, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useCreateListing } from '../hooks/useCreateListing';
-import { getCreateListingStyles } from '../styles/CreateListingStyle'; 
+import { getCreateListingStyles } from '../styles/CreateListingStyle';
+import PillSelector from '../components/PillSelector';
 
 export default function CreateListingScreen({ navigation, route }) {
   const { colors } = useTheme();
@@ -19,35 +20,6 @@ export default function CreateListingScreen({ navigation, route }) {
     price, setPrice, condition, setCondition, conditions,
     loading, handlePublish
   } = useCreateListing(navigation, initialImages);
-
-  const [dropdownConfig, setDropdownConfig] = useState({
-    visible: false, label: '', options: [], value: '', setValue: null
-  });
-
-  const openDropdown = (label, value, setValue, options) => {
-    Keyboard.dismiss();
-    setDropdownConfig({ visible: true, label, options, value, setValue });
-  };
-
-  const closeDropdown = () => {
-    setDropdownConfig(prev => ({ ...prev, visible: false }));
-  };
-
-  const renderDropdownButton = (label, value, setValue, options) => {
-    return (
-      <View style={styles.dropdownContainer}>
-        <Text style={styles.label}>{label}</Text>
-        <TouchableOpacity 
-          style={styles.inputBox} 
-          activeOpacity={0.7}
-          onPress={() => openDropdown(label, value, setValue, options)}
-        >
-          <Text style={{ color: value ? colors.textDark : colors.muted }}>{value || `Select ${label}`}</Text>
-          <Ionicons name="chevron-down" size={20} color={colors.textDark} />
-        </TouchableOpacity>
-      </View>
-    );
-  };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -129,26 +101,48 @@ export default function CreateListingScreen({ navigation, route }) {
               onBlur={() => Keyboard.dismiss()}
             />
 
-            {renderDropdownButton('Category', category, setCategory, categories)}
-            {renderDropdownButton('Announcement Type', announcementType, setAnnouncementType, announcementTypes)}
+            <View style={{ marginTop: 16 }}>
+              <PillSelector
+                label="Category"
+                options={categories}
+                selectedValue={category}
+                onSelect={setCategory}
+              />
 
-            {announcementType === 'For Sale' && (
-              <View style={{ marginTop: 16 }}>
-                <Text style={styles.label}>Price (RON)</Text>
-                <TextInput
-                  style={styles.inputBox}
-                  placeholder="e.g., 50"
-                  placeholderTextColor={colors.muted}
-                  keyboardType="numeric"
-                  value={price}
-                  onChangeText={setPrice}
-                  returnKeyType="done"
-                  onSubmitEditing={() => Keyboard.dismiss()}
-                />
-              </View>
-            )}
+              <PillSelector
+                label="Announcement Type"
+                options={announcementTypes}
+                selectedValue={announcementType}
+                onSelect={(val) => {
+                  setAnnouncementType(val);
+                  if (val !== 'For Sale') setPrice('');
+                }}
+              />
 
-            {renderDropdownButton('Condition', condition, setCondition, conditions)}
+              {announcementType === 'For Sale' && (
+                <>
+                  <Text style={styles.label}>Price (RON)</Text>
+                  <TextInput
+                    style={styles.inputBox}
+                    placeholder="e.g., 50"
+                    placeholderTextColor={colors.muted}
+                    keyboardType="numeric"
+                    value={price}
+                    onChangeText={setPrice}
+                    returnKeyType="done"
+                    onSubmitEditing={() => Keyboard.dismiss()}
+                  />
+                  <View style={{ height: 20 }} />
+                </>
+              )}
+
+              <PillSelector
+                label="Condition"
+                options={conditions}
+                selectedValue={condition}
+                onSelect={setCondition}
+              />
+            </View>
           </View>
 
         </ScrollView>
@@ -164,50 +158,6 @@ export default function CreateListingScreen({ navigation, route }) {
         </View>
 
       </KeyboardAvoidingView>
-
-      <Modal visible={dropdownConfig.visible} transparent animationType="slide">
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={closeDropdown}>
-          
-          <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-            <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: colors.textDark }]}>Select {dropdownConfig.label}</Text>
-              <TouchableOpacity onPress={closeDropdown}>
-                <Ionicons name="close-circle" size={28} color={colors.muted} />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {dropdownConfig.options.map(opt => {
-                const isActive = dropdownConfig.value === opt;
-                return (
-                  <TouchableOpacity
-                    key={opt}
-                    style={[
-                      styles.modalOption, 
-                      isActive && { backgroundColor: colors.surface, borderColor: colors.accent, borderWidth: 1 }
-                    ]}
-                    onPress={() => {
-                      dropdownConfig.setValue(opt);
-                      closeDropdown();
-                    }}
-                  >
-                    <Text style={{ 
-                      color: colors.textDark, 
-                      fontSize: 16, 
-                      fontWeight: isActive ? 'bold' : 'normal' 
-                    }}>
-                      {opt}
-                    </Text>
-                    {isActive && <Ionicons name="checkmark-circle" size={24} color={colors.accent} />}
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
-          
-        </TouchableOpacity>
-      </Modal>
-
     </View>
   );
 }

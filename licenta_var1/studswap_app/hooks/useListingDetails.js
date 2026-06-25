@@ -16,6 +16,34 @@ export const useListingDetails = (currentListing, navigation) => {
   const [similarListings, setSimilarListings] = useState([]);
   const [loadingExtra, setLoadingExtra] = useState(true);
 
+  const [seller, setSeller] = useState({
+    _id: currentListing?.userId || null,
+    name: currentListing?.userName || 'Student',
+    university: '',
+    avatar: null,
+  });
+
+  useEffect(() => {
+    const fetchSeller = async () => {
+      if (!currentListing?.userId) return;
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/users/${currentListing.userId}`);
+        if (res.ok) {
+          const userData = await res.json();
+          setSeller({
+            _id: currentListing.userId,
+            name: userData.displayName || currentListing.userName || 'Student',
+            university: userData.university || '',
+            avatar: userData.profileImageUrl || null,
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching seller:', error);
+      }
+    };
+    fetchSeller();
+  }, [currentListing]);
+
   useEffect(() => {
     const fetchExtraListings = async () => {
       if (!currentListing) return;
@@ -72,5 +100,5 @@ export const useListingDetails = (currentListing, navigation) => {
     ]);
   };
 
-  return { activeImageIndex, handleScroll, handleContactSeller, sellerListings, similarListings, loadingExtra, isViewerVisible, viewerIndex, openImageViewer, closeImageViewer, handleDeleteListing };
+  return { activeImageIndex, handleScroll, handleContactSeller, sellerListings, similarListings, loadingExtra, isViewerVisible, viewerIndex, openImageViewer, closeImageViewer, handleDeleteListing, seller };
 };

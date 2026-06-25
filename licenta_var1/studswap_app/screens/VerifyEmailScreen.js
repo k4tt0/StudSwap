@@ -6,15 +6,12 @@ import { useVerifyEmail } from '../hooks/useVerifyEmail';
 import { getVerifyStyles } from '../styles/VerifyEmailStyle';
 
 export default function VerifyEmailScreen({ navigation }) {
-  // 1. Get UI Theme
   const { colors } = useTheme();
   const globalStyles = getGlobalStyles(colors);
   const styles = getVerifyStyles(colors);
   
-  // 2. Get Business Logic from Hook
   const { checking, handleCheckVerification, handleResendEmail } = useVerifyEmail(navigation);
 
-  // 3. Render purely UI
   return (
     <View style={globalStyles.container}>
       <View style={styles.contentContainer}>

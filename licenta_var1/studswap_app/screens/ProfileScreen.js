@@ -1,123 +1,136 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Ionicons } from '@expo/vector-icons'; 
+import React from 'react';
+import { View, Text, TouchableOpacity, Image, FlatList, ActivityIndicator } from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'; 
 import NavBar from '../components/NavBar';
 import { useTheme } from '../context/ThemeContext'; 
-import { getHomeStyles } from '../styles/HomeScreenStyle';
+import { getProfileStyles } from '../styles/ProfileScreenStyle';
+import { useProfile } from '../hooks/useProfile';
 
-export default function ProfileScreen({ navigation }) {
-  const { colors, updateTheme, isDarkMode } = useTheme();
-  const styles = getHomeStyles(colors);
+export default function ProfileScreen({ route, navigation }) {
+  const { colors } = useTheme();
+  const styles = getProfileStyles(colors);
+  
+  const providedUserId = route?.params?.userId;
+  const { userProfile, myListings, loading, isOwnProfile, handlePickAvatar, handleDeleteListing } = useProfile(navigation, providedUserId);
 
-  const [userProfile, setUserProfile] = useState({
-    name: 'Loading...',
-    email: 'Loading...',
-    city: 'Loading...',
-    university: 'Loading...'
-  });
+  const renderProfileHeader = () => (
+    <View>
+      <View style={styles.profileSection}>
+        <TouchableOpacity 
+          style={styles.avatarContainer} 
+          onPress={handlePickAvatar} 
+          activeOpacity={isOwnProfile ? 0.8 : 1} 
+        >
+          {userProfile.avatar ? (
+            <Image source={{ uri: userProfile.avatar }} style={styles.avatarImage} />
+          ) : (
+            <Text style={styles.avatarInitials}>{userProfile.name.charAt(0)}</Text>
+          )}
+          
+          {isOwnProfile && (
+            <View style={styles.avatarCameraIcon}>
+              <Ionicons name="camera" size={15} color={colors.textDark} />
+            </View>
+          )}
+        </TouchableOpacity>
 
-  useEffect(() => {
-    loadUserProfile();
-  }, []);
+        <Text style={styles.nameText}>{userProfile.name}</Text>
+        <Text style={styles.locationText}>{userProfile.city}  •  {userProfile.university}</Text>
+      </View>
 
-  const loadUserProfile = async () => {
-    try {
-      setUserProfile({
-        name: 'Student Name',
-        email: 'student@university.ro',
-        city: 'Timisoara',
-        university: 'West University'
-      });
-    } catch (error) {
-      console.error('Error loading profile:', error);
-    }
-  };
+      {myListings.length > 0 && (
+        <Text style={styles.listingsHeading}>
+          {isOwnProfile ? 'Your listings' : `Listings by ${userProfile.name}`} ({myListings.length})
+        </Text>
+      )}
+    </View>
+  );
 
-  const handleLogout = async () => {
-    try {
-      await AsyncStorage.removeItem('userId');
-      await AsyncStorage.removeItem('userToken');
-      navigation.navigate('Start');
-    } catch (error) {
-      console.error('Error logging out:', error);
-    }
-  };
+  const renderListingItem = ({ item }) => (
+    <TouchableOpacity 
+      style={styles.listingCard}
+      activeOpacity={0.9}
+      onPress={() => navigation.navigate('ListingDetails', { listing: item })}
+    >
+      {item.images && item.images.length > 0 ? (
+        <Image source={{ uri: item.images[0] }} style={styles.listingImage} />
+      ) : (
+        <View style={styles.listingImage}>
+          <MaterialCommunityIcons name="image-outline" size={40} color={colors.muted} />
+        </View>
+      )}
 
-  const handleToggleTheme = () => {
-    const newTheme = isDarkMode ? 'light' : 'dark';
-    updateTheme(newTheme);
-  };
+      <Text style={styles.listingTitle}>{item.title}</Text>
+      <Text style={styles.listingDesc} numberOfLines={2}>
+        {item.description || 'No description provided.'}
+      </Text>
+
+      {isOwnProfile && (
+        <View style={styles.cardActions}>
+          <TouchableOpacity 
+            style={[styles.actionBtn, styles.editBtn]}
+            onPress={(e) => {
+              e.stopPropagation(); 
+              navigation.navigate('EditListing', { listing: item });
+            }}
+          >
+            <Text style={styles.editText}>Edit</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.actionBtn, styles.deleteBtn]}
+            onPress={(e) => {
+              e.stopPropagation(); 
+              handleDeleteListing(item.id || item._id);
+            }}
+          >
+            <Text style={styles.deleteText}>Delete</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        
-        <View style={[styles.headerContainer, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
-          <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.textDark }}>
-            Profile
-          </Text>
-          
-          <TouchableOpacity 
-            onPress={handleToggleTheme} 
-            style={{ 
-              padding: 8, 
-              backgroundColor: colors.surface, 
-              borderRadius: 20,
-              borderWidth: 1,
-              borderColor: colors.inputBorder
-            }}
-          >
-            <Ionicons 
-              name={isDarkMode ? "sunny" : "moon"} 
-              size={24} 
-              color={isDarkMode ? "#FFD700" : colors.textDark} 
-            />
-          </TouchableOpacity>
-        </View>
+      
+      <View style={styles.profileCardBackground} />
 
-        <View style={[styles.card, { marginHorizontal: 20, marginTop: 20 }]}>
-          <View style={{ alignItems: 'center', padding: 20 }}>
-            <View style={[styles.avatar, { width: 80, height: 80, borderRadius: 40 }]}>
-              <Text style={[styles.avatarText, { fontSize: 32 }]}>
-                {userProfile.name.charAt(0)}
+      <View style={[styles.headerRow, !isOwnProfile && { justifyContent: 'space-between' }]}>
+        {!isOwnProfile && (
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.settingsBtn}>
+            <Ionicons name="arrow-back" size={28} color={colors.textDark} />
+          </TouchableOpacity>
+        )}
+        {isOwnProfile && (
+          <TouchableOpacity onPress={() => navigation.navigate('Settings')} style={styles.settingsBtn}>
+            <Ionicons name="settings-outline" size={26} color={colors.textDark} />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {loading ? (
+        <ActivityIndicator size="large" color={colors.accent} style={{ marginTop: 80 }} />
+      ) : (
+        <FlatList
+          data={myListings}
+          keyExtractor={item => item.id || item._id}
+          ListHeaderComponent={renderProfileHeader}
+          renderItem={renderListingItem}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <MaterialCommunityIcons name="tag-outline" size={60} color={colors.inputBorder} />
+              <Text style={styles.emptyText}>
+                {isOwnProfile ? "You haven't posted any listings yet." : "This user has no active listings."}
               </Text>
             </View>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.textDark, marginTop: 12 }}>
-              {userProfile.name}
-            </Text>
-            <Text style={{ fontSize: 12, color: colors.muted, marginTop: 4 }}>
-              {userProfile.email}
-            </Text>
-          </View>
-        </View>
+          }
+        />
+      )}
 
-        <View style={[styles.card, { marginHorizontal: 20, marginTop: 20, padding: 20 }]}>
-          <View style={{ marginBottom: 16 }}>
-            <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>City</Text>
-            <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.textDark }}>
-              {userProfile.city}
-            </Text>
-          </View>
-          <View>
-            <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 4 }}>University</Text>
-            <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.textDark }}>
-              {userProfile.university}
-            </Text>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          onPress={handleLogout}
-          style={[styles.card, { marginHorizontal: 20, marginTop: 20, backgroundColor: '#E63946' }]} 
-        >
-          <Text style={{ textAlign: 'center', padding: 16, color: '#FFF', fontWeight: 'bold', fontSize: 16 }}>
-            Log Out
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
-
-      <NavBar navigation={navigation} activeScreen="Profile" />
+      {isOwnProfile && <NavBar navigation={navigation} activeScreen="Profile" />}
     </View>
   );
 }

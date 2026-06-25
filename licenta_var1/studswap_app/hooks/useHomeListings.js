@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore'; 
+import { collection, addDoc, setDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db, API_BASE_URL } from '../firebaseConfig';
 
 export const useHomeListings = () => {
@@ -82,14 +82,15 @@ export const useHomeListings = () => {
             senderName = userData.displayName || 'Someone';
           }
 
-          await addDoc(collection(db, 'Notifications'), {
+          const notifId = `like_${userId}_${itemId}`;
+          await setDoc(doc(db, 'Notifications', notifId), {
             receiverId: listing.userId,
-            senderId: userId,           
-            senderName: senderName,     
-            listingId: itemId,          
+            senderId: userId,
+            senderName: senderName,
+            listingId: itemId,
             type: 'like',
             text: `${senderName} saved your listing "${listing.title}".`,
-            isRead: false, 
+            isRead: false,
             timestamp: serverTimestamp()
           });
         }

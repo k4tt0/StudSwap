@@ -38,7 +38,8 @@ export const useRegister = (navigation) => {
 
       if (response.ok) {
         await AsyncStorage.setItem('userId', data.userId);
-        navigation.navigate('VerifyEmail'); 
+      //  navigation.navigate('VerifyEmail'); 
+        navigation.replace('Home');
       } else {
         Alert.alert("Registration Failed", data.error || "Something went wrong");
       }

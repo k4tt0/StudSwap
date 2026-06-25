@@ -18,6 +18,7 @@ import CreateListingScreen from './screens/CreateListingScreen';
 import ListingDetailsScreen from './screens/ListingDetailsScreen';
 import ChatRoomScreen from './screens/ChatRoomScreen';
 import EditListingScreen from './screens/EditListingScreen';
+import SettingsScreen from './screens/SettingsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -62,6 +63,7 @@ function AppNavigator() {
               <Stack.Screen name="SavedListings" component={SavedListingsScreen} />
               <Stack.Screen name="Messages" component={MessagesScreen} />
               <Stack.Screen name="Profile" component={ProfileScreen} />
+              <Stack.Screen name="Settings" component={SettingsScreen} />
             </Stack.Group>
 
             <Stack.Group screenOptions={{ presentation: 'modal', animation: 'slide_from_bottom' }}>

@@ -86,8 +86,9 @@ export const getListingDetailsStyles = (colors) => StyleSheet.create({
     color: colors.textDark,
     lineHeight: 24,
   },
-  sellerContainer: {
+  sellerCard: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 10,
     padding: 15,
@@ -96,26 +97,48 @@ export const getListingDetailsStyles = (colors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.inputBorder,
   },
-  sellerAvatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 15,
+  sellerTextContainer: {
+    flex: 1,
+    paddingRight: 12,
   },
-  sellerInitials: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: 'bold',
+  sellerLabel: {
+    fontSize: 13,
+    color: colors.muted,
+    marginBottom: 2,
   },
   sellerName: {
     fontSize: 16,
     fontWeight: 'bold',
     color: colors.textDark,
   },
-  
+  sellerUniversity: {
+    fontSize: 13,
+    color: colors.muted,
+    marginTop: 2,
+  },
+  sellerAvatarContainer: {
+    width: 50,
+    height: 50,
+  },
+  sellerAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    resizeMode: 'cover',
+  },
+  sellerAvatarPlaceholder: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: colors.accent,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sellerAvatarInitials: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
   carouselSection: {
     marginTop: 30,
   },

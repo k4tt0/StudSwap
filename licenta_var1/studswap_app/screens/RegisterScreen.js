@@ -3,14 +3,13 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingVi
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext'; 
 import { getGlobalStyles, getRegisterStyles } from '../styles/RegisterScreenStyle'; 
-import { useRegister } from '../hooks/useRegister'; // <-- Import our hook
+import { useRegister } from '../hooks/useRegister';
 
 export default function RegisterScreen({ navigation }) {
   const { colors } = useTheme();
   const globalStyles = getGlobalStyles(colors);
   const localStyles = getRegisterStyles(colors);
 
-  // Grab layout drivers directly out of our decoupled logic hook
   const {
     displayName,
     setDisplayName,
@@ -36,7 +35,6 @@ export default function RegisterScreen({ navigation }) {
         <Ionicons name="chevron-back" size={24} color={colors.textDark} />
       </TouchableOpacity>
 
-      {/* ADD THIS WRAPPER */}
       <KeyboardAvoidingView 
         style={{ flex: 1 }} 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

@@ -20,7 +20,6 @@ export const useVerifyEmail = (navigation) => {
       const response = await fetch(`${API_BASE_URL}/api/auth/check-verification/${userId}`);
       const data = await response.json();
 
-      // STRICT CHECK: Must explicitly be true
       if (data && data.emailVerified === true) {
         Alert.alert("Success!", "Your email is verified. Welcome to StudSwap!");
         navigation.navigate('Home'); 
@@ -39,7 +38,6 @@ export const useVerifyEmail = (navigation) => {
   };
 
   const handleResendEmail = () => {
-    // This will hold the backend call to trigger a new email later
     Alert.alert("WIP", "Resend email logic coming soon");
   };
 

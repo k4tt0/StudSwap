@@ -11,7 +11,7 @@ export default function ChatRoomScreen({ route, navigation }) {
   const { chatId, otherUserName, listingId, otherUserId } = route.params;
 
   const {
-    messages, newMessage, setNewMessage, listingData, currentUserId, sendMessage, handleSendPhoto,
+    messages, newMessage, setNewMessage, listingData, isListingUnavailable, currentUserId, sendMessage, handleSendPhoto,
     offerModalVisible, setOfferModalVisible, offerAmount, setOfferAmount, submitOffer, updateOfferStatus
   } = useChatRoom(chatId, listingId, otherUserId);
 
@@ -61,6 +61,7 @@ export default function ChatRoomScreen({ route, navigation }) {
     );
   };
 
+
   return (
     <KeyboardAvoidingView 
       style={styles.container} 
@@ -74,12 +75,17 @@ export default function ChatRoomScreen({ route, navigation }) {
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={26} color={colors.textDark} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{otherUserName}</Text>
+          <TouchableOpacity 
+            activeOpacity={0.6}
+            onPress={() => otherUserId && navigation.navigate('Profile', { userId: otherUserId })}
+          >
+            <Text style={styles.headerTitle}>{otherUserName}</Text>
+          </TouchableOpacity>
           <View style={{ width: 26 }} />
         </View>
 
         {/* LISTING CARD */}
-        {listingData && (
+        {listingData && !listingData._unavailable && (
           <TouchableOpacity style={styles.listingHeaderCard} activeOpacity={0.9} onPress={() => navigation.navigate('ListingDetails', { listing: listingData })}>
             {listingData.images && listingData.images.length > 0 && (
               <Image source={{ uri: listingData.images[0] }} style={styles.listingImageLeft} />
@@ -91,8 +97,41 @@ export default function ChatRoomScreen({ route, navigation }) {
           </TouchableOpacity>
         )}
 
+        {/* UNAVAILABLE LISTING CARD */}
+        {(isListingUnavailable || listingData?._unavailable) && (
+          <View style={[styles.listingHeaderCard, { opacity: 0.7 }]}>
+            <View style={[styles.listingImageLeft, { justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }]}>
+              <Ionicons name="alert-circle-outline" size={28} color={colors.muted} />
+            </View>
+            <View style={styles.listingDetailsRight}>
+              <Text style={styles.listingTitle} numberOfLines={1}>
+                {listingData?.title || 'Listing'}
+              </Text>
+              <Text style={[styles.listingPrice, { color: colors.muted }]}>
+                No longer available
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* MESSAGES LIST */}
-        <FlatList data={messages} keyExtractor={item => item.id} renderItem={renderMessage} inverted contentContainerStyle={{ paddingHorizontal: 15, paddingVertical: 15 }} showsVerticalScrollIndicator={false} />
+        {messages.length === 0 ? (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 30 }}>
+            <Ionicons name="chatbubbles-outline" size={56} color={colors.inputBorder} />
+            <Text style={{ color: colors.muted, fontSize: 15, marginTop: 12, textAlign: 'center' }}>
+              Say hi to start the conversation
+            </Text>
+          </View>
+        ) : (
+          <FlatList 
+            data={messages} 
+            keyExtractor={item => item.id} 
+            renderItem={renderMessage} 
+            inverted 
+            contentContainerStyle={{ paddingHorizontal: 15, paddingVertical: 15 }} 
+            showsVerticalScrollIndicator={false} 
+          />
+        )}
 
         {/* INPUT AREA */}
         <View style={styles.inputContainer}>
@@ -100,7 +139,7 @@ export default function ChatRoomScreen({ route, navigation }) {
             <TouchableOpacity style={styles.actionIconBtn} onPress={handleSendPhoto}>
               <Ionicons name="camera-outline" size={26} color={colors.muted} />
             </TouchableOpacity>
-            {listingData?.announcementType === 'For Sale' && (
+            {listingData?.announcementType === 'For Sale' && !listingData?._unavailable && (
               <TouchableOpacity style={styles.actionIconBtn} onPress={() => setOfferModalVisible(true)}>
                 <Ionicons name="cash-outline" size={26} color={colors.accent} />
               </TouchableOpacity>

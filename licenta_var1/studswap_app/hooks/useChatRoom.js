@@ -10,6 +10,7 @@ export const useChatRoom = (chatId, listingId, otherUserId) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [listingData, setListingData] = useState(null);
+  const [isListingUnavailable, setIsListingUnavailable] = useState(false);
 
   const [offerModalVisible, setOfferModalVisible] = useState(false);
   const [offerAmount, setOfferAmount] = useState('');
@@ -23,7 +24,13 @@ export const useChatRoom = (chatId, listingId, otherUserId) => {
           const res = await fetch(`${API_BASE_URL}/api/listings`);
           if (res.ok) {
             const allListings = await res.json();
-            setListingData(allListings.find(item => item.id === listingId || item._id === listingId));
+            const found = allListings.find(item => item.id === listingId || item._id === listingId);
+            if (found) {
+              setListingData(found);
+              setIsListingUnavailable(false);
+            } else {
+              setIsListingUnavailable(true);
+            }
           }
         } catch (e) { console.error(e); }
       }
@@ -39,6 +46,17 @@ export const useChatRoom = (chatId, listingId, otherUserId) => {
     });
     return () => unsubscribe();
   }, [chatId]);
+
+  useEffect(() => {
+    if (!chatId || !isListingUnavailable) return;
+    const unsub = onSnapshot(doc(db, 'Chats', chatId), (snap) => {
+      const data = snap.data();
+      if (data && data.listingSnapshot) {
+        setListingData({ ...data.listingSnapshot, _unavailable: true });
+      }
+    });
+    return () => unsub();
+  }, [chatId, isListingUnavailable]);
 
   useEffect(() => {
     if (!chatId || !currentUserId || messages.length === 0) return;
@@ -63,14 +81,24 @@ export const useChatRoom = (chatId, listingId, otherUserId) => {
         timestamp: serverTimestamp()
       });
 
-      await setDoc(doc(db, 'Chats', chatId), {
+      const listingSnapshot = listingData ? {
+        title: listingData.title || '',
+        price: listingData.price || null,
+        announcementType: listingData.announcementType || '',
+        images: listingData.images ? listingData.images.slice(0, 1) : [],
+      } : null;
+
+      const chatPayload = {
         chatId, listingId,
         participantIds: [currentUserId, otherUserId],
         lastMessage: type === 'offer' ? `New Offer: ${extraData.offerAmount} RON` : (text.startsWith('file:/') || text.startsWith('http') ? 'Sent an image' : text),
         lastMessageSenderId: currentUserId,
         isRead: false,
         lastMessageTime: serverTimestamp()
-      }, { merge: true });
+      };
+      if (listingSnapshot) chatPayload.listingSnapshot = listingSnapshot;
+
+      await setDoc(doc(db, 'Chats', chatId), chatPayload, { merge: true });
     } catch (error) { console.error(error); }
   };
 
@@ -96,14 +124,14 @@ export const useChatRoom = (chatId, listingId, otherUserId) => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) return Alert.alert('Permission Denied', 'We need access to your photos.');
     
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: false, quality: 0.6 });
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: false, quality: 0.6 });
     if (!result.canceled && result.assets) {
       sendMessage(result.assets[0].uri); 
     }
   };
 
   return { 
-    messages, newMessage, setNewMessage, listingData, currentUserId, sendMessage, handleSendPhoto,
+    messages, newMessage, setNewMessage, listingData, isListingUnavailable, currentUserId, sendMessage, handleSendPhoto,
     offerModalVisible, setOfferModalVisible, offerAmount, setOfferAmount, submitOffer, updateOfferStatus 
   };
 };

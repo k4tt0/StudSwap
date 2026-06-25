@@ -1,0 +1,107 @@
+import { StyleSheet } from 'react-native';
+
+export const getSettingsStyles = (colors) => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 60,
+    paddingBottom: 15,
+    paddingHorizontal: 20,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderColor: colors.inputBorder,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.textDark,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: colors.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 10,
+    marginTop: 20,
+    marginLeft: 4,
+  },
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.inputBorder,
+    overflow: 'hidden',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
+  rowBorder: {
+    borderBottomWidth: 1,
+    borderColor: colors.inputBorder,
+  },
+  rowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  rowText: {
+    fontSize: 16,
+    color: colors.textDark,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
+  infoLabel: {
+    fontSize: 15,
+    color: colors.muted,
+    fontWeight: '500',
+  },
+  infoValue: {
+    fontSize: 15,
+    color: colors.textDark,
+    flex: 1,
+    textAlign: 'right',
+    marginLeft: 16,
+  },
+  logoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    marginTop: 30,
+    paddingVertical: 15,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FFD5D5',
+    backgroundColor: '#FFF5F5',
+  },
+  logoutText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#E63946',
+  },
+  footerNote: {
+    textAlign: 'center',
+    color: colors.muted,
+    fontSize: 13,
+    marginTop: 25,
+  },
+});

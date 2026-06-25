@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { getEditListingStyles } from '../styles/EditListingStyle';
 import { useEditListing } from '../hooks/useEditListing';
+import PillSelector from '../components/PillSelector';
 
 const CATEGORIES = ['Books', 'Electronics', 'Equipment', 'Notes', 'Other'];
 const TYPES = ['For Sale', 'Donation', 'Exchange'];
@@ -24,25 +25,6 @@ export default function EditListingScreen({ route, navigation }) {
     isUpdating,
     handleUpdate
   } = useEditListing(listing, navigation);
-
-  const renderPills = (options, selectedValue, onSelect) => (
-    <View style={styles.pillsContainer}>
-      {options.map(option => {
-        const isActive = selectedValue === option;
-        return (
-          <TouchableOpacity
-            key={option}
-            style={[styles.pill, isActive && styles.pillActive]}
-            onPress={() => onSelect(option)}
-          >
-            <Text style={[styles.pillText, isActive && styles.pillTextActive]}>
-              {option}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
-  );
 
   return (
     <KeyboardAvoidingView 
@@ -68,13 +50,16 @@ export default function EditListingScreen({ route, navigation }) {
           placeholderTextColor={colors.muted}
         />
 
-        <Text style={styles.inputLabel}>Type of Listing</Text>
-        {renderPills(TYPES, announcementType, (val) => {
-          setAnnouncementType(val);
-          if (val !== 'For Sale') setPrice(''); 
-        })}
+        <PillSelector
+          label="Type of Listing"
+          options={TYPES}
+          selectedValue={announcementType}
+          onSelect={(val) => {
+            setAnnouncementType(val);
+            if (val !== 'For Sale') setPrice('');
+          }}
+        />
 
-        {/* Arătăm input-ul de preț DOAR dacă e For Sale */}
         {announcementType === 'For Sale' && (
           <>
             <Text style={styles.inputLabel}>Price (RON)</Text>
@@ -89,11 +74,19 @@ export default function EditListingScreen({ route, navigation }) {
           </>
         )}
 
-        <Text style={styles.inputLabel}>Category</Text>
-        {renderPills(CATEGORIES, category, setCategory)}
+        <PillSelector
+          label="Category"
+          options={CATEGORIES}
+          selectedValue={category}
+          onSelect={setCategory}
+        />
 
-        <Text style={styles.inputLabel}>Condition</Text>
-        {renderPills(CONDITIONS, condition, setCondition)}
+        <PillSelector
+          label="Condition"
+          options={CONDITIONS}
+          selectedValue={condition}
+          onSelect={setCondition}
+        />
 
         <Text style={styles.inputLabel}>Description</Text>
         <TextInput

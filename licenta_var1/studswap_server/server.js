@@ -93,7 +93,7 @@ app.post('/api/auth/register', async (req, res) => {
     await transporter.sendMail({
       from: `"StudSwap Team" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: "Verify your student email for StudSwap!", // Am curățat ghilimelele duble de aici
+      subject: "Verify your student email for StudSwap!", 
       html: `
         <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
           <h2>Welcome to StudSwap, ${displayName}!</h2>
@@ -235,6 +235,22 @@ app.get('/api/users/:userId', async (req, res) => {
   }
 });
 
+app.put('/api/users/:userId', async (req, res) => {
+  try {
+    const { profileImageUrl } = req.body;
+    
+    if (profileImageUrl) {
+      await db.collection('Users').doc(req.params.userId).update({
+        profileImageUrl: profileImageUrl
+      });
+    }
+
+    res.status(200).json({ message: "User profile updated successfully!" });
+  } catch (error) {
+    console.error("Update User Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // --- image upload route - max 5
 app.post('/api/upload', upload.array('images', 5), (req, res) => {

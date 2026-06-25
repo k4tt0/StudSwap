@@ -12,24 +12,25 @@ export const lightTheme = {
     navbar: '#1B241E',
     muted: '#A0AAB2',
     inputBorder: '#E0E0E0',
+    profileCardBg: '#EEF0E5', 
 }
 
 export const darkTheme = {
-  background: '#131314', // Deep dark grey
-  textDark: '#F9F9F7',   // Text becomes light!
-  accent: '#5E9C71',     // Slightly lighter green so it pops on dark backgrounds
-  surface: '#1E1E1E',    // Dark grey cards
-  navbar: '#000000',     // Pitch black navbar
-  muted: '#666666',      // Dark grey for inactive stuff
+  background: '#131314', 
+  textDark: '#F9F9F7',   
+  accent: '#5E9C71',    
+  surface: '#1E1E1E',   
+  navbar: '#000000',     
+  muted: '#666666',      
   inputBorder: '#333333',
+  profileCardBg: '#2A2B2A',
 };
 
 export const ThemeProvider = ({ children }) => {
-  const systemColorScheme = useColorScheme(); // Detects phone's system theme
-  const [themeMode, setThemeMode] = useState('system'); // 'system', 'light', 'dark'
+  const systemColorScheme = useColorScheme(); 
+  const [themeMode, setThemeMode] = useState('system'); 
   const [isThemeLoading, setIsThemeLoading] = useState(true);
 
-  // Load the user's saved preference when the app starts
   useEffect(() => {
     const loadTheme = async () => {
       try {
@@ -46,17 +47,15 @@ export const ThemeProvider = ({ children }) => {
     loadTheme();
   }, []);
 
-  // Function to let the user manually change the theme later in the Profile Settings
   const updateTheme = async (newMode) => {
     setThemeMode(newMode);
     await AsyncStorage.setItem('appTheme', newMode);
   };
 
-  // Figure out which colors to actually show right now
   const isDarkMode = themeMode === 'system' ? systemColorScheme === 'dark' : themeMode === 'dark';
   const colors = isDarkMode ? darkTheme : lightTheme;
 
-  if (isThemeLoading) return null; // Don't render until we know the theme
+  if (isThemeLoading) return null; 
 
   return (
     <ThemeContext.Provider value={{ colors, isDarkMode, themeMode, updateTheme }}>
@@ -65,5 +64,4 @@ export const ThemeProvider = ({ children }) => {
   );
 };
 
-// Custom hook to easily grab colors in any screen
 export const useTheme = () => useContext(ThemeContext);
