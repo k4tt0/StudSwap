@@ -5,10 +5,12 @@ import { useTheme } from '../context/ThemeContext';
 import { getSavedStyles } from '../styles/SavedListingsStyle';
 import { useSavedListings } from '../hooks/useSavedListings';
 import NavBar from '../components/NavBar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function SavedListingsScreen({ navigation }) {
   const { colors } = useTheme();
   const styles = getSavedStyles(colors);
+  const insets = useSafeAreaInsets();
   
   const { 
     searchQuery, setSearchQuery, 
@@ -60,7 +62,7 @@ export default function SavedListingsScreen({ navigation }) {
   return (
     <View style={styles.container}>
       
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <Text style={styles.title}>Saved Items</Text>
         
         {/* SEARCH + SORT BUTTON */}

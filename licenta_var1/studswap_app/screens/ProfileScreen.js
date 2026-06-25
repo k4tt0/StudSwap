@@ -5,10 +5,12 @@ import NavBar from '../components/NavBar';
 import { useTheme } from '../context/ThemeContext'; 
 import { getProfileStyles } from '../styles/ProfileScreenStyle';
 import { useProfile } from '../hooks/useProfile';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ProfileScreen({ route, navigation }) {
   const { colors } = useTheme();
   const styles = getProfileStyles(colors);
+  const insets = useSafeAreaInsets();
   
   const providedUserId = route?.params?.userId;
   const { userProfile, myListings, loading, isOwnProfile, handlePickAvatar, handleDeleteListing } = useProfile(navigation, providedUserId);
@@ -103,7 +105,7 @@ export default function ProfileScreen({ route, navigation }) {
       
       <View style={styles.profileCardBackground} />
 
-      <View style={[styles.headerRow, !isOwnProfile && { justifyContent: 'space-between' }]}>
+      <View style={[styles.headerRow, !isOwnProfile && { justifyContent: 'space-between' }, { paddingTop: insets.top + 10 }]}>
         {!isOwnProfile && (
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.settingsBtn}>
             <Ionicons name="arrow-back" size={28} color={colors.textDark} />

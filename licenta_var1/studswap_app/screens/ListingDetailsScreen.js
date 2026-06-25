@@ -8,12 +8,14 @@ import { useListingDetails } from '../hooks/useListingDetails';
 import ImageView from "react-native-image-viewing";
 import { collection, addDoc, setDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { API_BASE_URL, db } from '../firebaseConfig';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
 export default function ListingDetailsScreen({ route, navigation }) {
   const { colors } = useTheme();
   const styles = getListingDetailsStyles(colors);
+  const insets = useSafeAreaInsets();
   
   const { listing } = route.params; 
 
@@ -146,7 +148,7 @@ export default function ListingDetailsScreen({ route, navigation }) {
   return (
     <View style={styles.container}>
       
-      <View style={{ position: 'absolute', top: 50, left: 20, zIndex: 10 }}>
+      <View style={{ position: 'absolute', top: insets.top + 10, left: 20, zIndex: 10 }}>
         <TouchableOpacity 
           style={{ backgroundColor: 'rgba(0,0,0,0.5)', padding: 10, borderRadius: 20 }}
           onPress={() => navigation.goBack()}

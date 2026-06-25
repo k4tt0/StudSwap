@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { getEditListingStyles } from '../styles/EditListingStyle';
 import { useEditListing } from '../hooks/useEditListing';
@@ -13,6 +14,7 @@ const CONDITIONS = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
 export default function EditListingScreen({ route, navigation }) {
   const { colors } = useTheme();
   const styles = getEditListingStyles(colors);
+  const insets = useSafeAreaInsets();
   const { listing } = route.params;
 
   const {
@@ -31,7 +33,7 @@ export default function EditListingScreen({ route, navigation }) {
       style={styles.container} 
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="close" size={28} color={colors.textDark} />
         </TouchableOpacity>

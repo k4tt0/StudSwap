@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Image, FlatList, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { useCreateListing } from '../hooks/useCreateListing';
 import { getCreateListingStyles } from '../styles/CreateListingStyle';
@@ -9,6 +10,7 @@ import PillSelector from '../components/PillSelector';
 export default function CreateListingScreen({ navigation, route }) {
   const { colors } = useTheme();
   const styles = getCreateListingStyles(colors); 
+  const insets = useSafeAreaInsets();
   
   const initialImages = route.params?.initialImages || [];
   
@@ -24,7 +26,7 @@ export default function CreateListingScreen({ navigation, route }) {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 5 }}>
           <Ionicons name="close" size={28} color={colors.textDark} />
         </TouchableOpacity>

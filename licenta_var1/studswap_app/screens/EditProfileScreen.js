@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { getEditProfileStyles } from '../styles/EditProfileScreenStyle';
 import { useEditProfile } from '../hooks/useEditProfile';
@@ -8,6 +9,7 @@ import { useEditProfile } from '../hooks/useEditProfile';
 export default function EditProfileScreen({ navigation }) {
   const { colors } = useTheme();
   const styles = getEditProfileStyles(colors);
+  const insets = useSafeAreaInsets();
   const {
     displayName, setDisplayName,
     email, avatar, loading, saving,
@@ -28,7 +30,7 @@ export default function EditProfileScreen({ navigation }) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       {/* HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="close" size={28} color={colors.textDark} />
         </TouchableOpacity>

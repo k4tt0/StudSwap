@@ -5,6 +5,7 @@ import { getHomeStyles } from '../styles/HomeScreenStyle';
 import { useTheme } from '../context/ThemeContext'; 
 import NavBar from '../components/NavBar';
 import { useHomeListings } from '../hooks/useHomeListings'; 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const CATEGORIES = ['Books', 'Electronics', 'Equipment', 'Notes', 'Other'];
 const TYPES = ['For Sale', 'Donation', 'Exchange'];
@@ -20,6 +21,8 @@ export default function HomeScreen({ navigation }) {
   const { colors } = useTheme(); 
   const styles = getHomeStyles(colors); 
   
+  const insets = useSafeAreaInsets();
+
   const {
     userLocation,
     filteredListings,
@@ -150,7 +153,7 @@ export default function HomeScreen({ navigation }) {
   return (
     <View style={styles.container}>
       
-      <View style={styles.headerContainer}>
+      <View style={[styles.headerContainer, { paddingTop: insets.top + 10 }]}>
         <View style={styles.locationPill}>
           <Ionicons name="location-outline" size={14} color={colors.textDark} />
           <Text style={styles.locationText}>{userLocation}</Text>

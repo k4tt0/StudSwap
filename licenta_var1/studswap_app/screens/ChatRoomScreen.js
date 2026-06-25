@@ -4,10 +4,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { getChatRoomStyles } from '../styles/ChatRoomStyle';
 import { useChatRoom } from '../hooks/useChatRoom';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ChatRoomScreen({ route, navigation }) {
   const { colors } = useTheme();
   const styles = getChatRoomStyles(colors);
+  const insets = useSafeAreaInsets();
   const { chatId, otherUserName, listingId, otherUserId } = route.params;
 
   const {
@@ -71,7 +73,7 @@ export default function ChatRoomScreen({ route, navigation }) {
       <View style={styles.container}>
         
         {/* HEADER */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={26} color={colors.textDark} />
           </TouchableOpacity>

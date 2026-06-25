@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { getSettingsStyles } from '../styles/SettingsScreenStyle';
 import { useSettings } from '../hooks/useSettings';
@@ -16,12 +17,13 @@ const THEME_OPTIONS = [
 export default function SettingsScreen({ navigation }) {
   const { colors, themeMode, updateTheme } = useTheme();
   const styles = getSettingsStyles(colors);
+  const insets = useSafeAreaInsets();
   const { account, loading, handleLogout } = useSettings(navigation);
 
   return (
     <View style={styles.container}>
       {/* HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={26} color={colors.textDark} />
         </TouchableOpacity>

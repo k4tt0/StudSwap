@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, ScrollView, Dimensions } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { Image } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import NavBar from '../components/NavBar';
 import { useTheme } from '../context/ThemeContext'; 
 import { getMessagesStyles } from '../styles/MessagesScreenStyle';
@@ -13,6 +14,7 @@ const { width } = Dimensions.get('window');
 export default function MessagesScreen({ navigation }) {
   const { colors } = useTheme();
   const styles = getMessagesStyles(colors);
+  const insets = useSafeAreaInsets();
   
   const { chats, loading: chatsLoading, currentUserId } = useMessages();
   const { notifications, markAllAsRead } = useNotifications();
@@ -91,7 +93,7 @@ export default function MessagesScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerContainer}>
+      <View style={[styles.headerContainer, { paddingTop: insets.top + 10 }]}>
         <Text style={styles.headerTitle}>Inbox</Text>
         <View style={styles.twitterTabBar}>
           <TouchableOpacity style={styles.twitterTab} onPress={() => handleTabPress('chats')}><Text style={[styles.twitterTabText, { color: activeTab === 'chats' ? colors.textDark : colors.muted }]}>Chats</Text>{activeTab === 'chats' && <View style={styles.activeIndicator} />}</TouchableOpacity>
