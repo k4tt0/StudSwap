@@ -65,11 +65,18 @@ export default function ChatRoomScreen({ route, navigation }) {
 
 
   return (
+    // <KeyboardAvoidingView 
+    //   style={styles.container} 
+    //   behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+    //   keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    // >
+
     <KeyboardAvoidingView 
       style={styles.container} 
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      behavior="padding" 
+      keyboardVerticalOffset={0} 
     >
+   
       <View style={styles.container}>
         
         {/* HEADER */}
@@ -136,9 +143,14 @@ export default function ChatRoomScreen({ route, navigation }) {
         )}
 
         {/* INPUT AREA */}
-        <View style={[
+        {/* <View style={[
           styles.inputContainer, 
           { paddingBottom: Math.max(insets.bottom, 14) }
+        ]}> */}
+
+        <View style={[
+          styles.inputContainer, 
+          { paddingBottom: Platform.OS === 'ios' ? Math.max(insets.bottom, 14) : 14 }
         ]}>
           <View style={styles.iconButtonsGroup}>
             <TouchableOpacity style={styles.actionIconBtn} onPress={handleSendPhoto}>
