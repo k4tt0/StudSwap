@@ -51,7 +51,6 @@ export const useHomeListings = () => {
       setLoading(true);
       const myUserId = await AsyncStorage.getItem('userId');
 
-      // get my city so I only see listings from my own city (spec requirement)
       let myCity = null;
       if (myUserId) {
         const userRes = await fetch(`${API_BASE_URL}/api/users/${myUserId}`);
@@ -70,9 +69,22 @@ export const useHomeListings = () => {
           if (myCity && item.location && item.location !== myCity) return false; // same city only
           return true;
         });
+
         const sortedData = visible.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        setListings(sortedData);
-        setFilteredListings(sortedData);
+
+        const RECENT_LIMIT = 30;
+        const recentListings = sortedData.slice(0, RECENT_LIMIT);
+        const olderListings = sortedData.slice(RECENT_LIMIT);
+
+        for (let i = recentListings.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [recentListings[i], recentListings[j]] = [recentListings[j], recentListings[i]];
+        }
+
+        const finalRandomizedData = [...recentListings, ...olderListings];
+
+        setListings(finalRandomizedData);
+        setFilteredListings(finalRandomizedData);
       } else {
         setInfoModal({ visible: true, title: 'Error', message: 'Failed to load listings. Please try again.' });
       }
