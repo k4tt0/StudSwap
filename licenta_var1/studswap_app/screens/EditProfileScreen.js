@@ -108,9 +108,9 @@ export default function EditProfileScreen({ navigation }) {
           placeholderTextColor={colors.muted}
         />
         
-        {usernameStatus === 'checking' && <Text style={{ color: colors.muted, fontSize: 12, marginTop: -15, marginBottom: 15 }}>Checking availability...</Text>}
-        {usernameStatus === 'available' && <Text style={{ color: colors.accent, fontSize: 12, marginTop: -15, marginBottom: 15 }}>Username is available! ✓</Text>}
-        {usernameStatus === 'taken' && <Text style={{ color: '#E63946', fontSize: 12, marginTop: -15, marginBottom: 15 }}>Username is already taken ✗</Text>}
+        {usernameStatus === 'checking' && <Text style={{ color: colors.muted, fontSize: 12, marginTop: 6 }}>Checking availability...</Text>}
+        {usernameStatus === 'available' && <Text style={{ color: colors.accent, fontSize: 12, marginTop: 6 }}>Username is available! ✓</Text>}
+        {usernameStatus === 'taken' && <Text style={{ color: '#E63946', fontSize: 12, marginTop: 6 }}>Username is already taken ✗</Text>}
 
         <Text style={styles.label}>Email</Text>
         <View style={[styles.input, styles.inputDisabled]}>

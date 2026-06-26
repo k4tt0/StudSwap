@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from '../firebaseConfig'; 
@@ -22,14 +21,12 @@ export const useCreateListing = (navigation, initialImages = []) => {
   const handleAddMoreImages = async () => {
     const remainingSlots = 5 - images.length;
     if (remainingSlots <= 0) {
-      Alert.alert('Limit Reached', 'You can only upload up to 5 images.');
-      return;
+      return { type: 'error', title: 'Limit Reached', message: 'You can only upload up to 5 images.' };
     }
 
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission Denied', 'Need camera roll access.');
-      return;
+      return { type: 'error', title: 'Permission Denied', message: 'Need camera roll access.' };
     }
 
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -49,15 +46,20 @@ export const useCreateListing = (navigation, initialImages = []) => {
     setImages(prev => prev.filter((_, index) => index !== indexToRemove));
   };
 
-  const handlePublish = async () => {
-    console.log("Publish button pressed!"); 
+  const validate = () => {
+    const errors = {};
+    if (images.length === 0) errors.images = 'Please add at least one image.';
+    if (!title || title.trim() === '') errors.title = 'Please give your listing a title.';
+    if (!description || description.trim() === '') errors.description = 'Please describe your item.';
+    if (!category) errors.category = 'Please select a category.';
+    if (!announcementType) errors.announcementType = 'Please select an announcement type.';
+    if (announcementType === 'For Sale' && (!price || price.trim() === '')) errors.price = 'Please enter a price.';
+    if (!condition) errors.condition = 'Please select the item condition.';
+    return errors;
+  };
 
-    if (images.length === 0) return Alert.alert('Missing Photo', 'Please add at least one image.');
-    if (!title || title.trim() === '') return Alert.alert('Missing Title', 'Please give your listing a title.');
-    if (!category) return Alert.alert('Missing Category', 'Please select a category.');
-    if (!announcementType) return Alert.alert('Missing Type', 'Please select an announcement type.');
-    if (announcementType === 'For Sale' && (!price || price.trim() === '')) return Alert.alert('Missing Price', 'Please enter a price.');
-    if (!condition) return Alert.alert('Missing Condition', 'Please select the item condition.');
+  const handlePublish = async () => {
+    if (Object.keys(validate()).length > 0) return null;
 
     setLoading(true);
     
@@ -114,12 +116,12 @@ export const useCreateListing = (navigation, initialImages = []) => {
 
       if (!listingResponse.ok) throw new Error("Failed to save listing details.");
 
-      Alert.alert('Success', 'Your item is now live!');
-      navigation.navigate('Home'); 
-      
+      navigation.navigate('Home');
+      return { type: 'success', title: 'Success', message: 'Your item is now live!' };
+
     } catch (error) {
       console.error("Publish Error:", error);
-      Alert.alert('Upload Failed', error.message || 'Something went wrong while publishing.');
+      return { type: 'error', title: 'Upload Failed', message: error.message || 'Something went wrong while publishing.' };
     } finally {
       setLoading(false);
     }
@@ -133,6 +135,6 @@ export const useCreateListing = (navigation, initialImages = []) => {
     announcementType, setAnnouncementType, announcementTypes,
     price, setPrice,
     condition, setCondition, conditions,
-    loading, handlePublish
+    loading, handlePublish, validate
   };
 };

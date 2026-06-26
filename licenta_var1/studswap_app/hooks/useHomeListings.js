@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { collection, addDoc, setDoc, doc, serverTimestamp } from 'firebase/firestore';
@@ -12,7 +11,9 @@ export const useHomeListings = () => {
   const [filteredListings, setFilteredListings] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [savedIds, setSavedIds] = useState([]); 
+  const [savedIds, setSavedIds] = useState([]);
+  const [infoModal, setInfoModal] = useState({ visible: false, title: '', message: '' });
+  const closeInfoModal = () => setInfoModal(prev => ({ ...prev, visible: false }));
 
   const [filters, setFilters] = useState({
     minPrice: '', maxPrice: '', category: '', announcementType: '', condition: '', faculty: ''
@@ -73,11 +74,11 @@ export const useHomeListings = () => {
         setListings(sortedData);
         setFilteredListings(sortedData);
       } else {
-        Alert.alert('Error', 'Failed to load listings. Please try again.');
+        setInfoModal({ visible: true, title: 'Error', message: 'Failed to load listings. Please try again.' });
       }
     } catch (error) {
       console.error('Error loading listings:', error);
-      Alert.alert('Connection Error', 'Could not reach the server. Check your connection and try again.');
+      setInfoModal({ visible: true, title: 'Connection Error', message: 'Could not reach the server. Check your connection and try again.' });
     } finally {
       setLoading(false);
     }
@@ -145,5 +146,5 @@ export const useHomeListings = () => {
   };
   const clearFilters = () => setFilters({ minPrice: '', maxPrice: '', category: '', announcementType: '', condition: '', faculty: '' });
 
-  return { userLocation, filteredListings, searchQuery, setSearchQuery, loading, filters, updateFilter, clearFilters, setFilters, savedIds, toggleLike };
+  return { userLocation, filteredListings, searchQuery, setSearchQuery, loading, filters, updateFilter, clearFilters, setFilters, savedIds, toggleLike, infoModal, closeInfoModal };
 };

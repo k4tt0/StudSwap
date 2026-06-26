@@ -96,11 +96,17 @@ export const useListingDetails = (currentListing, navigation) => {
     if (index !== activeImageIndex) setActiveImageIndex(index);
   };
 
-  const handleContactSeller = async (sellerId, sellerName) => {
+  const handleContactSeller = async (sellerId, sellerName, status) => {
     try {
+      if (status === 'sold') {
+        return { type: 'error', title: 'Listing Sold', message: 'This item has already been sold and is no longer available to message about.' };
+      }
+
       const myUserId = await AsyncStorage.getItem('userId');
       if (!myUserId) return;
-      if (myUserId === sellerId) return alert("This is your own listing!");
+      if (myUserId === sellerId) {
+        return { type: 'error', title: 'Your Listing', message: 'This is your own listing!' };
+      }
 
       const chatId = [myUserId, sellerId].sort().join('_') + `_${currentListing.id || currentListing._id}`;
       navigation.navigate('ChatRoom', {

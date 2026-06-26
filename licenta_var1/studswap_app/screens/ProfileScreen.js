@@ -7,6 +7,7 @@ import { getProfileStyles } from '../styles/ProfileScreenStyle';
 import { useProfile } from '../hooks/useProfile';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ConfirmModal from '../components/ConfirmModal';
+import InfoModal from '../components/InfoModal';
 
 export default function ProfileScreen({ route, navigation }) {
   const { colors } = useTheme();
@@ -15,10 +16,20 @@ export default function ProfileScreen({ route, navigation }) {
 
   const [deleteVisible, setDeleteVisible] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
+  const [infoVisible, setInfoVisible] = useState(false);
+  const [infoConfig, setInfoConfig] = useState({ title: '', message: '' });
 
   const providedUserId = route?.params?.userId;
   const { userProfile, myListings, loading, isOwnProfile, handlePickAvatar, handleDeleteListing } =
     useProfile(navigation, providedUserId);
+
+  const onPickAvatarPress = async () => {
+    const result = await handlePickAvatar();
+    if (result) {
+      setInfoConfig({ title: result.title, message: result.message });
+      setInfoVisible(true);
+    }
+  };
 
   const confirmDelete = async () => {
     try {
@@ -36,7 +47,7 @@ export default function ProfileScreen({ route, navigation }) {
       <View style={styles.profileSection}>
         <TouchableOpacity
           style={styles.avatarContainer}
-          onPress={handlePickAvatar}
+          onPress={onPickAvatarPress}
           activeOpacity={isOwnProfile ? 0.8 : 1}
         >
           {userProfile.avatar ? (
@@ -66,41 +77,55 @@ export default function ProfileScreen({ route, navigation }) {
     </View>
   );
 
-  const renderListingItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.listingCard}
-      activeOpacity={0.9}
-      onPress={() => navigation.navigate('ListingDetails', { listing: item })}
-    >
-      <View style={{ position: 'relative' }}>
-        {item.images && item.images.length > 0 ? (
-          <Image source={{ uri: item.images[0] }} style={styles.listingImage} />
-        ) : (
-          <View style={styles.listingImage}>
-            <MaterialCommunityIcons name="image-outline" size={40} color={colors.muted} />
-          </View>
-        )}
-        {item.status === 'sold' && (
-          <View
-            style={{
-              position: 'absolute',
-              top: 10,
-              left: 10,
-              backgroundColor: colors.muted,
-              paddingHorizontal: 10,
-              paddingVertical: 4,
-              borderRadius: 10,
-            }}
-          >
-            <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 12 }}>SOLD</Text>
-          </View>
-        )}
-      </View>
+  const getTypeTag = (type) => {
+    switch (type) {
+      case 'Donation':
+        return { label: 'Donation', bg: '#3B82F6' };
+      case 'Exchange':
+        return { label: 'Exchange', bg: '#A855F7' };
+      default:
+        return { label: 'For Sale', bg: colors.accent };
+    }
+  };
 
-      <Text style={styles.listingTitle}>{item.title}</Text>
-      <Text style={styles.listingDesc} numberOfLines={2}>
-        {item.description || 'No description provided.'}
-      </Text>
+  const renderListingItem = ({ item }) => {
+    const tag = getTypeTag(item.announcementType);
+
+    return (
+      <TouchableOpacity
+        style={styles.listingCard}
+        activeOpacity={0.9}
+        onPress={() => navigation.navigate('ListingDetails', { listing: item })}
+      >
+        <View style={{ position: 'relative' }}>
+          {item.images && item.images.length > 0 ? (
+            <Image source={{ uri: item.images[0] }} style={styles.listingImage} />
+          ) : (
+            <View style={styles.listingImage}>
+              <MaterialCommunityIcons name="image-outline" size={32} color={colors.muted} />
+            </View>
+          )}
+
+          {item.status === 'sold' ? (
+            <View style={[styles.typeTag, { backgroundColor: colors.muted }]}>
+              <Text style={styles.typeTagText}>SOLD</Text>
+            </View>
+          ) : (
+            <View style={[styles.typeTag, { backgroundColor: tag.bg }]}>
+              <Text style={styles.typeTagText}>{tag.label}</Text>
+            </View>
+          )}
+        </View>
+
+        <Text style={styles.listingTitle} numberOfLines={1}>{item.title}</Text>
+        <Text style={styles.listingPrice}>
+          {item.announcementType === 'Donation' ? 'Free' :
+           item.announcementType === 'Exchange' ? 'For Exchange' :
+           `${item.price} RON`}
+        </Text>
+        <Text style={styles.listingDesc} numberOfLines={2}>
+          {item.description || 'No description provided.'}
+        </Text>
 
       {isOwnProfile && (
         <View style={styles.cardActions}>
@@ -126,8 +151,9 @@ export default function ProfileScreen({ route, navigation }) {
           </TouchableOpacity>
         </View>
       )}
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -181,6 +207,14 @@ export default function ProfileScreen({ route, navigation }) {
           setPendingDeleteId(null);
         }}
         onConfirm={confirmDelete}
+      />
+
+      <InfoModal
+        visible={infoVisible}
+        title={infoConfig.title}
+        message={infoConfig.message}
+        colors={colors}
+        onClose={() => setInfoVisible(false)}
       />
     </View>
   );

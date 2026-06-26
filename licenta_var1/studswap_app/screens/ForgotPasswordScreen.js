@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../context/ThemeContext'; 
-import { getGlobalStyles } from '../styles/RegisterScreenStyle'; 
+import { useTheme } from '../context/ThemeContext';
+import { getGlobalStyles } from '../styles/RegisterScreenStyle';
 import { getLoginStyles } from '../styles/LoginScreenStyle';
 import { useForgotPassword } from '../hooks/useForgotPassword';
+import InfoModal from '../components/InfoModal';
 
 export default function ForgotPasswordScreen({ navigation }) {
   const { colors } = useTheme();
@@ -12,6 +13,16 @@ export default function ForgotPasswordScreen({ navigation }) {
   const localStyles = getLoginStyles(colors); // We can reuse login styles for headers!
 
   const { email, setEmail, loading, handleResetPassword } = useForgotPassword(navigation);
+
+  const [infoVisible, setInfoVisible] = useState(false);
+  const [infoConfig, setInfoConfig] = useState({ title: '', message: '', redirect: false });
+
+  const onResetPress = async () => {
+    const result = await handleResetPassword();
+    if (!result) return;
+    setInfoConfig({ title: result.title, message: result.message, redirect: !!result.redirect });
+    setInfoVisible(true);
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -53,7 +64,7 @@ export default function ForgotPasswordScreen({ navigation }) {
           </View>
 
           <TouchableOpacity
-            onPress={handleResetPassword}
+            onPress={onResetPress}
             disabled={loading}
             style={[globalStyles.buttonSolid, { marginTop: 24 }, loading && { opacity: 0.7 }]}
             activeOpacity={0.8}
@@ -65,6 +76,17 @@ export default function ForgotPasswordScreen({ navigation }) {
 
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <InfoModal
+        visible={infoVisible}
+        title={infoConfig.title}
+        message={infoConfig.message}
+        colors={colors}
+        onClose={() => {
+          setInfoVisible(false);
+          if (infoConfig.redirect) navigation.goBack();
+        }}
+      />
 
     </View>
   );

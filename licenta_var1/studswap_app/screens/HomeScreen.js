@@ -4,8 +4,9 @@ import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { getHomeStyles } from '../styles/HomeScreenStyle';
 import { useTheme } from '../context/ThemeContext'; 
 import NavBar from '../components/NavBar';
-import { useHomeListings } from '../hooks/useHomeListings'; 
+import { useHomeListings } from '../hooks/useHomeListings';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import InfoModal from '../components/InfoModal';
 
 const CATEGORIES = ['Books', 'Electronics', 'Equipment', 'Notes', 'Other'];
 const TYPES = ['For Sale', 'Donation', 'Exchange'];
@@ -29,7 +30,8 @@ export default function HomeScreen({ navigation }) {
     searchQuery, setSearchQuery,
     loading,
     filters, updateFilter, clearFilters, setFilters,
-    savedIds, toggleLike 
+    savedIds, toggleLike,
+    infoModal, closeInfoModal
   } = useHomeListings();
 
   const [isFilterVisible, setIsFilterVisible] = useState(false);
@@ -272,6 +274,14 @@ export default function HomeScreen({ navigation }) {
       </Modal>
 
       <NavBar navigation={navigation} activeScreen="Home" />
+
+      <InfoModal
+        visible={infoModal.visible}
+        title={infoModal.title}
+        message={infoModal.message}
+        colors={colors}
+        onClose={closeInfoModal}
+      />
     </View>
   );
 }

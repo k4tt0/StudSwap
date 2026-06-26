@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import { View, TouchableOpacity, Text, TextInput, Alert, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
+import { View, TouchableOpacity, Text, TextInput, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext'; 
 import { getGlobalStyles } from '../styles/RegisterScreenStyle'; 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Image, FlatList, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,22 +6,47 @@ import { useTheme } from '../context/ThemeContext';
 import { useCreateListing } from '../hooks/useCreateListing';
 import { getCreateListingStyles } from '../styles/CreateListingStyle';
 import PillSelector from '../components/PillSelector';
+import InfoModal from '../components/InfoModal';
 
 export default function CreateListingScreen({ navigation, route }) {
   const { colors } = useTheme();
-  const styles = getCreateListingStyles(colors); 
+  const styles = getCreateListingStyles(colors);
   const insets = useSafeAreaInsets();
-  
+
   const initialImages = route.params?.initialImages || [];
-  
+
   const {
     images, handleAddMoreImages, removeImage,
     title, setTitle, description, setDescription,
     category, setCategory, categories,
     announcementType, setAnnouncementType, announcementTypes,
     price, setPrice, condition, setCondition, conditions,
-    loading, handlePublish
+    loading, handlePublish, validate
   } = useCreateListing(navigation, initialImages);
+
+  const [infoVisible, setInfoVisible] = useState(false);
+  const [infoConfig, setInfoConfig] = useState({ title: '', message: '' });
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false);
+
+  const errors = attemptedSubmit ? validate() : {};
+
+  const showInfo = (result) => {
+    if (!result) return;
+    setInfoConfig({ title: result.title, message: result.message });
+    setInfoVisible(true);
+  };
+
+  const onAddMoreImages = async () => {
+    const result = await handleAddMoreImages();
+    showInfo(result);
+  };
+
+  const onPublishPress = async () => {
+    setAttemptedSubmit(true);
+    if (Object.keys(validate()).length > 0) return;
+    const result = await handlePublish();
+    showInfo(result);
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -61,7 +86,7 @@ export default function CreateListingScreen({ navigation, route }) {
                       style={styles.addImageBtn} 
                       onPress={() => {
                         Keyboard.dismiss();
-                        handleAddMoreImages();
+                        onAddMoreImages();
                       }}
                     >
                       <Ionicons name="camera-outline" size={32} color={colors.muted} />
@@ -80,6 +105,7 @@ export default function CreateListingScreen({ navigation, route }) {
               }}
             />
           </View>
+          {errors.images && <Text style={[styles.errorText, { marginLeft: 24, marginTop: -10 }]}>{errors.images}</Text>}
 
           <View style={styles.formContainer}>
             <Text style={styles.label}>Title</Text>
@@ -90,6 +116,7 @@ export default function CreateListingScreen({ navigation, route }) {
               value={title}
               onChangeText={setTitle}
             />
+            {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
 
             <Text style={[styles.label, { marginTop: 16 }]}>Description</Text>
             <TextInput
@@ -102,6 +129,7 @@ export default function CreateListingScreen({ navigation, route }) {
               textAlignVertical="top"
               onBlur={() => Keyboard.dismiss()}
             />
+            {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
 
             <View style={{ marginTop: 16 }}>
               <PillSelector
@@ -110,6 +138,7 @@ export default function CreateListingScreen({ navigation, route }) {
                 selectedValue={category}
                 onSelect={setCategory}
               />
+              {errors.category && <Text style={[styles.errorText, { marginTop: -12 }]}>{errors.category}</Text>}
 
               <PillSelector
                 label="Announcement Type"
@@ -120,6 +149,7 @@ export default function CreateListingScreen({ navigation, route }) {
                   if (val !== 'For Sale') setPrice('');
                 }}
               />
+              {errors.announcementType && <Text style={[styles.errorText, { marginTop: -12 }]}>{errors.announcementType}</Text>}
 
               {announcementType === 'For Sale' && (
                 <>
@@ -134,6 +164,7 @@ export default function CreateListingScreen({ navigation, route }) {
                     returnKeyType="done"
                     onSubmitEditing={() => Keyboard.dismiss()}
                   />
+                  {errors.price && <Text style={styles.errorText}>{errors.price}</Text>}
                   <View style={{ height: 20 }} />
                 </>
               )}
@@ -144,15 +175,16 @@ export default function CreateListingScreen({ navigation, route }) {
                 selectedValue={condition}
                 onSelect={setCondition}
               />
+              {errors.condition && <Text style={[styles.errorText, { marginTop: -12 }]}>{errors.condition}</Text>}
             </View>
           </View>
 
         </ScrollView>
 
         <View style={styles.bottomFooter}>
-          <TouchableOpacity 
-            style={[styles.publishBtn, loading && { opacity: 0.7 }]} 
-            onPress={handlePublish}
+          <TouchableOpacity
+            style={[styles.publishBtn, loading && { opacity: 0.7 }]}
+            onPress={onPublishPress}
             disabled={loading}
           >
             <Text style={styles.publishBtnText}>{loading ? "Publishing..." : "Publish item"}</Text>
@@ -160,6 +192,14 @@ export default function CreateListingScreen({ navigation, route }) {
         </View>
 
       </KeyboardAvoidingView>
+
+      <InfoModal
+        visible={infoVisible}
+        title={infoConfig.title}
+        message={infoConfig.message}
+        colors={colors}
+        onClose={() => setInfoVisible(false)}
+      />
     </View>
   );
 }

@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, Image, KeyboardAvoidingView, Platform, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { getChatRoomStyles } from '../styles/ChatRoomStyle';
 import { useChatRoom } from '../hooks/useChatRoom';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import InfoModal from '../components/InfoModal';
 
 export default function ChatRoomScreen({ route, navigation }) {
   const { colors } = useTheme();
@@ -16,6 +17,25 @@ export default function ChatRoomScreen({ route, navigation }) {
     messages, newMessage, setNewMessage, listingData, isListingUnavailable, currentUserId, sendMessage, handleSendPhoto,
     offerModalVisible, setOfferModalVisible, offerAmount, setOfferAmount, submitOffer, updateOfferStatus
   } = useChatRoom(chatId, listingId, otherUserId);
+
+  const [infoVisible, setInfoVisible] = useState(false);
+  const [infoConfig, setInfoConfig] = useState({ title: '', message: '' });
+
+  const showInfo = (result) => {
+    if (!result) return;
+    setInfoConfig({ title: result.title, message: result.message });
+    setInfoVisible(true);
+  };
+
+  const onSendPhotoPress = async () => {
+    const result = await handleSendPhoto();
+    showInfo(result);
+  };
+
+  const onSubmitOfferPress = () => {
+    const result = submitOffer();
+    showInfo(result);
+  };
 
   const renderMessage = ({ item }) => {
     const isMyMessage = item.senderId === currentUserId;
@@ -153,7 +173,7 @@ export default function ChatRoomScreen({ route, navigation }) {
           { paddingBottom: Platform.OS === 'ios' ? Math.max(insets.bottom, 14) : 14 }
         ]}>
           <View style={styles.iconButtonsGroup}>
-            <TouchableOpacity style={styles.actionIconBtn} onPress={handleSendPhoto}>
+            <TouchableOpacity style={styles.actionIconBtn} onPress={onSendPhotoPress}>
               <Ionicons name="camera-outline" size={26} color={colors.muted} />
             </TouchableOpacity>
             {listingData?.announcementType === 'For Sale' && !listingData?._unavailable && (
@@ -191,13 +211,21 @@ export default function ChatRoomScreen({ route, navigation }) {
                 <TouchableOpacity onPress={() => setOfferModalVisible(false)} style={styles.modalCancelBtn}>
                   <Text style={styles.modalCancelText}>Cancel</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={submitOffer} style={styles.modalSubmitBtn}>
+                <TouchableOpacity onPress={onSubmitOfferPress} style={styles.modalSubmitBtn}>
                   <Text style={styles.modalSubmitText}>Send Offer</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </View>
         </Modal>
+
+        <InfoModal
+          visible={infoVisible}
+          title={infoConfig.title}
+          message={infoConfig.message}
+          colors={colors}
+          onClose={() => setInfoVisible(false)}
+        />
 
       </View>
     </KeyboardAvoidingView>

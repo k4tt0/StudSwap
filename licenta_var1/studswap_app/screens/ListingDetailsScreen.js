@@ -10,6 +10,7 @@ import { setDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { API_BASE_URL, db } from '../firebaseConfig';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ConfirmModal from '../components/ConfirmModal';
+import InfoModal from '../components/InfoModal';
 
 const { width } = Dimensions.get('window');
 
@@ -25,6 +26,9 @@ export default function ListingDetailsScreen({ route, navigation }) {
     confirmText: 'Confirm',
     onConfirm: null,
   });
+
+  const [infoVisible, setInfoVisible] = useState(false);
+  const [infoConfig, setInfoConfig] = useState({ title: '', message: '' });
 
   const { listing } = route.params;
 
@@ -395,14 +399,31 @@ export default function ListingDetailsScreen({ route, navigation }) {
           </View>
         ) : (
           <TouchableOpacity
-            style={styles.contactBtn}
-            onPress={() => handleContactSeller(listing.userId, listing.userName)}
+            style={[styles.contactBtn, currentStatus === 'sold' && { backgroundColor: colors.muted }]}
+            disabled={currentStatus === 'sold'}
+            onPress={async () => {
+              const result = await handleContactSeller(listing.userId, listing.userName, currentStatus);
+              if (result) {
+                setInfoConfig({ title: result.title, message: result.message });
+                setInfoVisible(true);
+              }
+            }}
           >
             <Ionicons name="chatbubbles-outline" size={24} color="#FFF" />
-            <Text style={styles.contactBtnText}>Message {listing.userName?.split(' ')[0]}</Text>
+            <Text style={styles.contactBtnText}>
+              {currentStatus === 'sold' ? 'Listing Sold' : `Message ${listing.userName?.split(' ')[0]}`}
+            </Text>
           </TouchableOpacity>
         )}
       </View>
+
+      <InfoModal
+        visible={infoVisible}
+        title={infoConfig.title}
+        message={infoConfig.message}
+        colors={colors}
+        onClose={() => setInfoVisible(false)}
+      />
 
       <ImageView
         images={listing.images ? listing.images.map(uri => ({ uri })) : []}

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
 export const useImagePicker = (maxImages = 5) => {
@@ -7,10 +6,9 @@ export const useImagePicker = (maxImages = 5) => {
 
   const pickImages = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
+
     if (status !== 'granted') {
-      Alert.alert('Permission Denied', 'We need access to your camera roll to post items!');
-      return;
+      return { type: 'error', title: 'Permission Denied', message: 'We need access to your camera roll to post items!' };
     }
 
     let result = await ImagePicker.launchImageLibraryAsync({

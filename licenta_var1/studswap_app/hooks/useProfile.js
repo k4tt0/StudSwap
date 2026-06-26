@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
@@ -57,7 +56,7 @@ export const useProfile = (navigation, providedUserId) => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        return Alert.alert('Permission needed', 'Please allow access to your photos.');
+        return { type: 'error', title: 'Permission needed', message: 'Please allow access to your photos.' };
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({

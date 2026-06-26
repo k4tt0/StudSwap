@@ -52,12 +52,18 @@ export const getCreateListingStyles = (colors) => StyleSheet.create({
   formContainer: { 
     paddingHorizontal: 20 
   },
-  label: { 
-    fontSize: 14, 
-    fontWeight: '600', 
-    marginBottom: 8, 
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
     marginLeft: 4,
-    color: colors.textDark 
+    color: colors.textDark
+  },
+  errorText: {
+    color: '#E63946',
+    fontSize: 12,
+    marginTop: 6,
+    marginLeft: 4,
   },
   inputBox: { 
     borderWidth: 1, 

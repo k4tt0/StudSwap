@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Alert } from 'react-native';
 import { API_BASE_URL } from '../firebaseConfig';
 
 export const useForgotPassword = (navigation) => {
@@ -8,8 +7,7 @@ export const useForgotPassword = (navigation) => {
 
   const handleResetPassword = async () => {
     if (!email) {
-      Alert.alert("Error", "Please enter your student email address.");
-      return;
+      return { type: 'error', title: 'Error', message: 'Please enter your student email address.' };
     }
 
     setLoading(true);
@@ -23,17 +21,13 @@ export const useForgotPassword = (navigation) => {
       const data = await response.json();
 
       if (response.ok) {
-        Alert.alert(
-          "Email Sent!", 
-          "Check your inbox for a link to reset your password.",
-          [{ text: "OK", onPress: () => navigation.goBack() }] // Send them back to Login
-        );
+        return { type: 'success', title: 'Email Sent!', message: 'Check your inbox for a link to reset your password.', redirect: true };
       } else {
-        Alert.alert("Request Failed", data.error || "Something went wrong");
+        return { type: 'error', title: 'Request Failed', message: data.error || 'Something went wrong' };
       }
     } catch (error) {
       console.error("Forgot Password Error:", error);
-      Alert.alert("Network Error", "Could not connect to the server.");
+      return { type: 'error', title: 'Network Error', message: 'Could not connect to the server.' };
     } finally {
       setLoading(false);
     }

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc } from 'firebase/firestore';
 import * as ImagePicker from 'expo-image-picker';
-import { Alert } from 'react-native';
 import { db, API_BASE_URL } from '../firebaseConfig';
 
 export const useChatRoom = (chatId, listingId, otherUserId) => {
@@ -104,8 +103,7 @@ export const useChatRoom = (chatId, listingId, otherUserId) => {
 
   const submitOffer = () => {
     if (!offerAmount || isNaN(offerAmount)) {
-      Alert.alert('Invalid', 'Please enter a valid number.');
-      return;
+      return { type: 'error', title: 'Invalid', message: 'Please enter a valid number.' };
     }
     sendMessage(`Offer of ${offerAmount} RON`, 'offer', { offerAmount: Number(offerAmount), offerStatus: 'pending' });
     setOfferModalVisible(false);
@@ -122,8 +120,10 @@ export const useChatRoom = (chatId, listingId, otherUserId) => {
 
   const handleSendPhoto = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) return Alert.alert('Permission Denied', 'We need access to your photos.');
-    
+    if (!permissionResult.granted) {
+      return { type: 'error', title: 'Permission Denied', message: 'We need access to your photos.' };
+    }
+
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: false, quality: 0.6 });
     if (!result.canceled && result.assets) {
       sendMessage(result.assets[0].uri); 
