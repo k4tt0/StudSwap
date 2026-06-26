@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
-import { collection, addDoc, setDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, setDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db, API_BASE_URL } from '../firebaseConfig';
 
 export const useHomeListings = () => {
@@ -10,7 +10,10 @@ export const useHomeListings = () => {
   const [listings, setListings] = useState([]);
   const [filteredListings, setFilteredListings] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(true);
+  
+  const [loading, setLoading] = useState(true); 
+  const [refreshing, setRefreshing] = useState(false); 
+  
   const [savedIds, setSavedIds] = useState([]);
   const [infoModal, setInfoModal] = useState({ visible: false, title: '', message: '' });
   const closeInfoModal = () => setInfoModal(prev => ({ ...prev, visible: false }));
@@ -46,11 +49,11 @@ export const useHomeListings = () => {
     } catch (e) { console.error(e); }
   };
 
-  const loadListings = async () => {
+  const loadListings = async (isRefresh = false) => {
     try {
-      setLoading(true);
+      if (!isRefresh) setLoading(true); 
+      
       const myUserId = await AsyncStorage.getItem('userId');
-
       let myCity = null;
       if (myUserId) {
         const userRes = await fetch(`${API_BASE_URL}/api/users/${myUserId}`);
@@ -64,9 +67,9 @@ export const useHomeListings = () => {
       if (response.ok) {
         const listingsData = await response.json();
         const visible = listingsData.filter(item => {
-          if (item.userId === myUserId) return false;        // not my own
-          if (item.status === 'sold') return false;          // hide sold
-          if (myCity && item.location && item.location !== myCity) return false; // same city only
+          if (item.userId === myUserId) return false;        
+          if (item.status === 'sold') return false;          
+          if (myCity && item.location && item.location !== myCity) return false; 
           return true;
         });
 
@@ -86,14 +89,20 @@ export const useHomeListings = () => {
         setListings(finalRandomizedData);
         setFilteredListings(finalRandomizedData);
       } else {
-        setInfoModal({ visible: true, title: 'Error', message: 'Failed to load listings. Please try again.' });
+        if (!isRefresh) setInfoModal({ visible: true, title: 'Error', message: 'Failed to load listings.' });
       }
     } catch (error) {
       console.error('Error loading listings:', error);
-      setInfoModal({ visible: true, title: 'Connection Error', message: 'Could not reach the server. Check your connection and try again.' });
+      if (!isRefresh) setInfoModal({ visible: true, title: 'Connection Error', message: 'Could not reach the server.' });
     } finally {
-      setLoading(false);
+      if (!isRefresh) setLoading(false);
     }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadListings(true); 
+    setRefreshing(false);
   };
 
   const toggleLike = async (itemId) => {
@@ -158,5 +167,9 @@ export const useHomeListings = () => {
   };
   const clearFilters = () => setFilters({ minPrice: '', maxPrice: '', category: '', announcementType: '', condition: '', faculty: '' });
 
-  return { userLocation, filteredListings, searchQuery, setSearchQuery, loading, filters, updateFilter, clearFilters, setFilters, savedIds, toggleLike, infoModal, closeInfoModal };
+  return { 
+    userLocation, filteredListings, searchQuery, setSearchQuery, 
+    loading, refreshing, handleRefresh, // <-- Aici
+    filters, updateFilter, clearFilters, setFilters, savedIds, toggleLike, infoModal, closeInfoModal 
+  };
 };

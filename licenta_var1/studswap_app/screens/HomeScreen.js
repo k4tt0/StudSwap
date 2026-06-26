@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, FlatList, TouchableOpacity, TextInput, Image, Modal } from 'react-native';
+import { View, Text, ScrollView, FlatList, TouchableOpacity, TextInput, Image, Modal, RefreshControl } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { getHomeStyles } from '../styles/HomeScreenStyle';
 import { useTheme } from '../context/ThemeContext'; 
@@ -29,6 +29,7 @@ export default function HomeScreen({ navigation }) {
     filteredListings,
     searchQuery, setSearchQuery,
     loading,
+    refreshing, handleRefresh,
     filters, updateFilter, clearFilters, setFilters,
     savedIds, toggleLike,
     infoModal, closeInfoModal
@@ -39,11 +40,11 @@ export default function HomeScreen({ navigation }) {
   const getTypeTag = (type) => {
     switch (type) {
       case 'Donation':
-        return { label: 'Donation', bg: '#3B82F6' };   // blue
+        return { label: 'Donation', bg: '#3B82F6' };   
       case 'Exchange':
-        return { label: 'Exchange', bg: '#A855F7' };    // purple
+        return { label: 'Exchange', bg: '#A855F7' };    
       default:
-        return { label: 'For Sale', bg: colors.accent }; // your green
+        return { label: 'For Sale', bg: colors.accent }; 
     }
   };
 
@@ -67,7 +68,6 @@ export default function HomeScreen({ navigation }) {
             <Text style={{ fontSize: 12, color: colors.muted }}>{item.category}</Text>
           </View>
           
-          {/* AICI ESTE BUTONUL DE LIKE FUNCTIONAL! */}
           <TouchableOpacity onPress={() => toggleLike(itemId)}>
             <MaterialCommunityIcons 
               name={isLiked ? "heart" : "heart-outline"} 
@@ -200,6 +200,16 @@ export default function HomeScreen({ navigation }) {
           renderItem={renderItem}
           contentContainerStyle={[styles.feedContainer, { paddingBottom: 100 }]}
           showsVerticalScrollIndicator={false}
+          
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={[colors.accent]} 
+              tintColor={colors.accent} 
+            />
+          }
+
           ListEmptyComponent={
             <View style={{ justifyContent: 'center', alignItems: 'center', marginTop: 60, paddingHorizontal: 40 }}>
               <MaterialCommunityIcons 
