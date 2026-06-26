@@ -1,18 +1,18 @@
 const admin = require('firebase-admin');
-const fs = require('fs');
-const path = require('path');
 
 let serviceAccount;
 
 if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  // Render: decode from base64
   try {
-    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    const decoded = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT, 'base64').toString('utf-8');
+    serviceAccount = JSON.parse(decoded);
   } catch (e) {
-    console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT:', e.message);
+    console.error('Firebase env var decode error:', e.message);
     process.exit(1);
   }
 } else {
-  // Local development
+  // Local: use file
   serviceAccount = require('./firebaseServiceAccount.json');
 }
 
