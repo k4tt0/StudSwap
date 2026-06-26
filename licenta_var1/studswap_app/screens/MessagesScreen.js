@@ -9,10 +9,14 @@ import { getMessagesStyles } from '../styles/MessagesScreenStyle';
 import { useMessages } from '../hooks/useMessages';
 import { useNotifications } from '../hooks/useNotifications';
 
+import ConfirmModal from '../components/ConfirmModal'; 
+import { deleteDoc, doc } from 'firebase/firestore'; 
+import { db } from '../firebaseConfig';
+
 const { width } = Dimensions.get('window');
 
 export default function MessagesScreen({ navigation }) {
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme(); 
   const styles = getMessagesStyles(colors);
   const insets = useSafeAreaInsets();
   
@@ -21,6 +25,9 @@ export default function MessagesScreen({ navigation }) {
   
   const [activeTab, setActiveTab] = useState('chats'); 
   const scrollViewRef = useRef(null);
+
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [chatToDelete, setChatToDelete] = useState(null);
 
   useEffect(() => {
     if (activeTab === 'notifications') markAllAsRead();
@@ -37,10 +44,35 @@ export default function MessagesScreen({ navigation }) {
     setActiveTab(currentIndex === 0 ? 'chats' : 'notifications');
   };
 
+  const handleLongPressChat = (chatId) => {
+    setChatToDelete(chatId);
+    setDeleteModalVisible(true);
+  };
+
+  const confirmDeleteChat = async () => {
+    if (!chatToDelete) return;
+    try {
+      await deleteDoc(doc(db, 'Chats', chatToDelete));
+    } catch (error) {
+      console.error("Error deleting chat: ", error);
+    } finally {
+      setDeleteModalVisible(false);
+      setChatToDelete(null);
+    }
+  };
+
   const renderChatItem = ({ item }) => {
     const isUnread = !item.isRead && item.lastMessageSenderId !== currentUserId;
     return (
-      <TouchableOpacity style={styles.chatCard} activeOpacity={0.7} onPress={() => navigation.navigate('ChatRoom', { chatId: item.id, otherUserId: item.otherUserId, otherUserName: item.otherUserName, listingId: item.listingId })}>
+      <TouchableOpacity 
+        style={[
+          styles.chatCard,
+          isUnread && { borderColor: colors.accent, backgroundColor: isDarkMode ? '#1E2A22' : '#F4F9F5' }
+        ]} 
+        activeOpacity={0.7} 
+        onPress={() => navigation.navigate('ChatRoom', { chatId: item.id, otherUserId: item.otherUserId, otherUserName: item.otherUserName, listingId: item.listingId })}
+        onLongPress={() => handleLongPressChat(item.id)} // DECLANȘEAZĂ ȘTERGEREA
+      >
         {item.listingImage ? <Image source={{ uri: item.listingImage }} style={styles.listingAvatar} /> : <View style={[styles.listingAvatar, { justifyContent: 'center', alignItems: 'center' }]}><MaterialCommunityIcons name="image-outline" size={24} color={colors.muted} /></View>}
         <View style={styles.chatInfo}>
           <Text style={[styles.chatName, isUnread && { fontWeight: '900', color: colors.textDark }]}>{item.otherUserName}</Text>
@@ -72,7 +104,10 @@ export default function MessagesScreen({ navigation }) {
 
     return (
       <TouchableOpacity 
-        style={styles.chatCard} 
+        style={[
+          styles.chatCard, 
+          isUnread && { backgroundColor: isDarkMode ? '#1E2A22' : '#F4F9F5', borderColor: colors.accent }
+        ]} 
         activeOpacity={item.senderId ? 0.7 : 1} 
         onPress={handleNotificationPress}
         disabled={!item.senderId} 
@@ -84,7 +119,7 @@ export default function MessagesScreen({ navigation }) {
           <Text style={[styles.lastMessage, { color: colors.textDark, fontWeight: isUnread ? 'bold' : '500' }]}>{item.text}</Text>
         </View>
         <View style={{ alignItems: 'flex-end' }}>
-          <Text style={styles.timeText}>{item.time}</Text>
+          <Text style={[styles.timeText, isUnread && { fontWeight: 'bold', color: colors.accent }]}>{item.time}</Text>
           {isUnread && <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: colors.accent, marginTop: 5, marginRight: 8 }} />}
         </View>
       </TouchableOpacity>
@@ -109,6 +144,21 @@ export default function MessagesScreen({ navigation }) {
         </View>
       </ScrollView>
       <NavBar navigation={navigation} activeScreen="Messages" />
+
+      {/* sterhege chat modal */}
+      <ConfirmModal
+        visible={deleteModalVisible}
+        title="Delete Chat"
+        message="Are you sure you want to permanently delete this conversation?"
+        confirmText="Delete"
+        cancelText="Cancel"
+        colors={colors}
+        onConfirm={confirmDeleteChat}
+        onCancel={() => {
+          setDeleteModalVisible(false);
+          setChatToDelete(null);
+        }}
+      />
     </View>
   );
 }

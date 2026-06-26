@@ -88,11 +88,10 @@ export const getChatRoomStyles = (colors) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
-    paddingVertical: 14, 
+    paddingTop: 14, 
     borderTopWidth: 1,
     borderTopColor: colors.inputBorder,
     backgroundColor: colors.surface, 
-    paddingBottom: Platform.OS === 'ios' ? 30 : 14,
   },
   iconButtonsGroup: {
     flexDirection: 'row',

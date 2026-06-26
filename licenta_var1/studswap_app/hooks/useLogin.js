@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from '../firebaseConfig';
 
@@ -10,20 +9,23 @@ export const useLogin = (navigation) => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const handleLogin = async () => {
+    const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Error", "Please enter both email and password.");
-      return;
+      return {
+        type: 'error',
+        title: 'Error',
+        message: 'Please enter both email and password.',
+      };
     }
-    
+
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      const response = await fetch(API_BASE_URL + '/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          email: email.trim().toLowerCase(), 
-          password 
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          password,
         }),
       });
 
@@ -32,20 +34,29 @@ export const useLogin = (navigation) => {
       if (response.ok) {
         await AsyncStorage.setItem('userId', data.userId);
         await AsyncStorage.setItem('userToken', data.token);
-        
+
         if (rememberMe) {
           await AsyncStorage.setItem('rememberUser', 'true');
         } else {
           await AsyncStorage.removeItem('rememberUser');
         }
-        
+
         navigation.navigate('Home');
-      } else {
-        Alert.alert("Login Failed", data.error || "Invalid credentials");
+        return { type: 'success' };
       }
+
+      return {
+        type: 'error',
+        title: 'Login Failed',
+        message: data.error || 'Invalid credentials',
+      };
     } catch (error) {
-      console.error("Login Error:", error);
-      Alert.alert("Network Error", "Could not connect to the server.");
+      console.error('Login Error:', error);
+      return {
+        type: 'error',
+        title: 'Network Error',
+        message: 'Could not connect to the server.',
+      };
     } finally {
       setLoading(false);
     }

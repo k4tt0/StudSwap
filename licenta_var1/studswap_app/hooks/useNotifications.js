@@ -3,6 +3,24 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { collection, query, where, onSnapshot, doc, setDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 
+const formatTime = (timestamp) => {
+  if (!timestamp) return '';
+  const date = timestamp.toDate();
+  const now = new Date();
+  const diffInMs = now - date;
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+  if (diffInDays === 0) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } else if (diffInDays === 1) {
+    return 'Yesterday';
+  } else if (diffInDays < 7) {
+    return `${diffInDays} days ago`;
+  } else {
+    return date.toLocaleDateString([], { day: 'numeric', month: 'short' });
+  }
+};
+
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,11 +36,8 @@ export const useNotifications = () => {
         const loaded = [];
         snapshot.forEach(doc => {
           const data = doc.data();
-          let time = '';
-          if (data.timestamp) {
-            const date = data.timestamp.toDate();
-            time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          }
+          const time = formatTime(data.timestamp);
+          
           loaded.push({ id: doc.id, ...data, time, rawTime: data.timestamp?.toMillis() || 0 });
         });
         loaded.sort((a, b) => b.rawTime - a.rawTime);
