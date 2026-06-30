@@ -40,6 +40,13 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow StudSwap to access your photos to upload listing images and profile pictures.",
+          "cameraPermission": false
+        }
       ]
     ],
     "experiments": {
