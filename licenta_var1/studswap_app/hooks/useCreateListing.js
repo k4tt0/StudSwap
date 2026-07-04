@@ -24,21 +24,26 @@ export const useCreateListing = (navigation, initialImages = []) => {
       return { type: 'error', title: 'Limit Reached', message: 'You can only upload up to 5 images.' };
     }
 
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      return { type: 'error', title: 'Permission Denied', message: 'Need camera roll access.' };
-    }
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        return { type: 'error', title: 'Permission Denied', message: 'Need camera roll access.' };
+      }
 
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['image'],
-      allowsMultipleSelection: true,
-      selectionLimit: remainingSlots,
-      quality: 0.7,
-    });
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsMultipleSelection: true,
+        selectionLimit: remainingSlots,
+        quality: 0.7,
+      });
 
-    if (!result.canceled) {
-      const newUris = result.assets.map(asset => asset.uri);
-      setImages(prev => [...prev, ...newUris].slice(0, 5));
+      if (!result.canceled) {
+        const newUris = result.assets.map(asset => asset.uri);
+        setImages(prev => [...prev, ...newUris].slice(0, 5));
+      }
+    } catch (e) {
+      console.error('Error picking images:', e);
+      return { type: 'error', title: 'Error', message: 'Could not open the photo picker.' };
     }
   };
 

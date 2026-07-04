@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, Image, KeyboardAvoidingView, Platform, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
@@ -20,17 +20,6 @@ export default function ChatRoomScreen({ route, navigation }) {
 
   const [infoVisible, setInfoVisible] = useState(false);
   const [infoConfig, setInfoConfig] = useState({ title: '', message: '' });
-
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
-      if (e.data.action.type !== 'GO_BACK' && e.data.action.type !== 'POP') return;
-      if (!listingData || listingData._unavailable) return;
-
-      e.preventDefault();
-      navigation.replace('ListingDetails', { listing: listingData });
-    });
-    return unsubscribe;
-  }, [navigation, listingData]);
 
   const showInfo = (result) => {
     if (!result) return;
