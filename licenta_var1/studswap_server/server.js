@@ -26,11 +26,18 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 } // max 5MB per photo
 });
 
-const { db, auth } = require('./firebase');
+const { db, auth, serviceAccountInfo } = require('./firebase');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// TEMPORARY: confirms which Firebase credential this deployment actually
+// loaded (no secrets exposed). Remove once the Firestore permission issue
+// is resolved.
+app.get('/api/debug/firebase', (req, res) => {
+  res.json(serviceAccountInfo);
+});
 
 // --- Setting up email sender
 const transporter = nodemailer.createTransport({ 
