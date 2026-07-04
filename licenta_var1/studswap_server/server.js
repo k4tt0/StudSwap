@@ -39,6 +39,22 @@ app.get('/api/debug/firebase', (req, res) => {
   res.json(serviceAccountInfo);
 });
 
+app.get('/api/debug/firestore-error', async (req, res) => {
+  try {
+    const snapshot = await db.collection('Listings').get();
+    res.json({ success: true, count: snapshot.size });
+  } catch (error) {
+    res.json({
+      success: false,
+      name: error.name,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      metadata: error.metadata ? JSON.stringify(error.metadata) : undefined,
+    });
+  }
+});
+
 // --- Setting up email sender
 const transporter = nodemailer.createTransport({ 
   service: 'gmail',
