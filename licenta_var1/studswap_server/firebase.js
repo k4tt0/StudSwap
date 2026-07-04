@@ -21,6 +21,10 @@ admin.initializeApp({
 });
 
 const db = admin.firestore();
+// Render's network restricts outbound gRPC/HTTP2, which makes Firestore's
+// default transport silently fail and misreport as PERMISSION_DENIED.
+// Forcing REST avoids that failed gRPC handshake entirely.
+db.settings({ preferRest: true });
 const auth = admin.auth();
 
 // temporary debug
