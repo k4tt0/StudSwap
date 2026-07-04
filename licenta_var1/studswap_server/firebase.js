@@ -23,8 +23,8 @@ admin.initializeApp({
 const db = admin.firestore();
 const auth = admin.auth();
 
-// Non-secret identifiers only (no private key) — used by a temporary debug
-// route to confirm which credential the deployed server actually loaded.
+// temporary debug
+// route to confirm which credential the deployed server actually loaded
 const serviceAccountInfo = {
   project_id: serviceAccount.project_id,
   client_email: serviceAccount.client_email,
