@@ -28,6 +28,7 @@ const auth = admin.auth();
 const serviceAccountInfo = {
   project_id: serviceAccount.project_id,
   client_email: serviceAccount.client_email,
+  private_key_id: serviceAccount.private_key_id,
 };
 
 module.exports = { db, auth, serviceAccountInfo };
