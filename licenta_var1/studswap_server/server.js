@@ -26,75 +26,11 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 } // max 5MB per photo
 });
 
-const https = require('https');
-const { db, auth, serviceAccountInfo, credential } = require('./firebase');
+const { db, auth } = require('./firebase');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-// TEMPORARY: confirms which Firebase credential this deployment actually
-// loaded (no secrets exposed). Remove once the Firestore permission issue
-// is resolved.
-app.get('/api/debug/firebase', (req, res) => {
-  res.json(serviceAccountInfo);
-});
-
-app.get('/api/debug/firestore-error', async (req, res) => {
-  try {
-    const snapshot = await db.collection('Listings').get();
-    res.json({ success: true, count: snapshot.size });
-  } catch (error) {
-    const plain = {};
-    for (const key of Object.getOwnPropertyNames(error)) {
-      try { plain[key] = error[key]; } catch (e) { /* skip unserializable */ }
-    }
-    let responseInfo;
-    try {
-      if (error.response) {
-        responseInfo = {
-          status: error.response.status,
-          url: error.response.config?.url || error.response.request?.responseURL,
-          dataPreview: typeof error.response.data === 'string'
-            ? error.response.data.slice(0, 500)
-            : error.response.data,
-        };
-      }
-    } catch (e) { /* skip */ }
-
-    let safePlain;
-    try { safePlain = JSON.parse(JSON.stringify(plain)); } catch (e) { safePlain = { unserializable: true }; }
-
-    res.json({ success: false, error: safePlain, responseInfo, cause: error.cause ? String(error.cause) : undefined });
-  }
-});
-
-// Bypasses the Firestore SDK/google-gax entirely: fetches a raw OAuth2
-// token and hits the Firestore REST endpoint directly with plain https,
-// so we can see the actual response instead of an SDK-swallowed error.
-app.get('/api/debug/raw-firestore', async (req, res) => {
-  try {
-    const tokenResult = await credential.getAccessToken();
-    const url = `https://firestore.googleapis.com/v1/projects/${serviceAccountInfo.project_id}/databases/(default)/documents/Listings`;
-
-    const result = await new Promise((resolve, reject) => {
-      https.get(url, { headers: { Authorization: `Bearer ${tokenResult.access_token}` } }, (r) => {
-        let body = '';
-        r.on('data', (chunk) => { body += chunk; });
-        r.on('end', () => resolve({ status: r.statusCode, headers: r.headers, body }));
-      }).on('error', reject);
-    });
-
-    res.json({
-      url,
-      status: result.status,
-      contentType: result.headers['content-type'],
-      bodyPreview: result.body.slice(0, 1500),
-    });
-  } catch (error) {
-    res.json({ error: error.message, stack: error.stack });
-  }
-});
 
 // --- Setting up email sender
 const transporter = nodemailer.createTransport({ 

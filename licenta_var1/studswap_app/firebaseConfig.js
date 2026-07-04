@@ -4,7 +4,7 @@ import { getFirestore } from "firebase/firestore";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
-export const API_BASE_URL = 'https://studswap.onrender.com';
+export const API_BASE_URL = 'http://192.168.100.149:5000';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
