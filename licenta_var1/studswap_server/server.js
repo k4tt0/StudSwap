@@ -44,14 +44,27 @@ app.get('/api/debug/firestore-error', async (req, res) => {
     const snapshot = await db.collection('Listings').get();
     res.json({ success: true, count: snapshot.size });
   } catch (error) {
-    res.json({
-      success: false,
-      name: error.name,
-      code: error.code,
-      message: error.message,
-      details: error.details,
-      metadata: error.metadata ? JSON.stringify(error.metadata) : undefined,
-    });
+    const plain = {};
+    for (const key of Object.getOwnPropertyNames(error)) {
+      try { plain[key] = error[key]; } catch (e) { /* skip unserializable */ }
+    }
+    let responseInfo;
+    try {
+      if (error.response) {
+        responseInfo = {
+          status: error.response.status,
+          url: error.response.config?.url || error.response.request?.responseURL,
+          dataPreview: typeof error.response.data === 'string'
+            ? error.response.data.slice(0, 500)
+            : error.response.data,
+        };
+      }
+    } catch (e) { /* skip */ }
+
+    let safePlain;
+    try { safePlain = JSON.parse(JSON.stringify(plain)); } catch (e) { safePlain = { unserializable: true }; }
+
+    res.json({ success: false, error: safePlain, responseInfo, cause: error.cause ? String(error.cause) : undefined });
   }
 });
 
