@@ -16,9 +16,9 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT) {
   serviceAccount = require('./firebaseServiceAccount.json');
 }
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
+const credential = admin.credential.cert(serviceAccount);
+
+admin.initializeApp({ credential });
 
 const db = admin.firestore();
 // Render's network restricts outbound gRPC/HTTP2, which makes Firestore's
@@ -35,4 +35,4 @@ const serviceAccountInfo = {
   private_key_id: serviceAccount.private_key_id,
 };
 
-module.exports = { db, auth, serviceAccountInfo };
+module.exports = { db, auth, serviceAccountInfo, credential };

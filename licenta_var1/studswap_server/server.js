@@ -26,7 +26,8 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 } // max 5MB per photo
 });
 
-const { db, auth, serviceAccountInfo } = require('./firebase');
+const https = require('https');
+const { db, auth, serviceAccountInfo, credential } = require('./firebase');
 
 const app = express();
 app.use(cors());
@@ -65,6 +66,33 @@ app.get('/api/debug/firestore-error', async (req, res) => {
     try { safePlain = JSON.parse(JSON.stringify(plain)); } catch (e) { safePlain = { unserializable: true }; }
 
     res.json({ success: false, error: safePlain, responseInfo, cause: error.cause ? String(error.cause) : undefined });
+  }
+});
+
+// Bypasses the Firestore SDK/google-gax entirely: fetches a raw OAuth2
+// token and hits the Firestore REST endpoint directly with plain https,
+// so we can see the actual response instead of an SDK-swallowed error.
+app.get('/api/debug/raw-firestore', async (req, res) => {
+  try {
+    const tokenResult = await credential.getAccessToken();
+    const url = `https://firestore.googleapis.com/v1/projects/${serviceAccountInfo.project_id}/databases/(default)/documents/Listings`;
+
+    const result = await new Promise((resolve, reject) => {
+      https.get(url, { headers: { Authorization: `Bearer ${tokenResult.access_token}` } }, (r) => {
+        let body = '';
+        r.on('data', (chunk) => { body += chunk; });
+        r.on('end', () => resolve({ status: r.statusCode, headers: r.headers, body }));
+      }).on('error', reject);
+    });
+
+    res.json({
+      url,
+      status: result.status,
+      contentType: result.headers['content-type'],
+      bodyPreview: result.body.slice(0, 1500),
+    });
+  } catch (error) {
+    res.json({ error: error.message, stack: error.stack });
   }
 });
 
