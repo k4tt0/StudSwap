@@ -1,5 +1,6 @@
-import React from 'react';
-import { View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -25,6 +26,23 @@ const Stack = createNativeStackNavigator();
 
 function AppNavigator() {
   const { colors } = useTheme();
+  const [initialRoute, setInitialRoute] = useState(null);
+
+  useEffect(() => {
+    const checkRememberedUser = async () => {
+      try {
+        const [remembered, token, userId] = await Promise.all([
+          AsyncStorage.getItem('rememberUser'),
+          AsyncStorage.getItem('userToken'),
+          AsyncStorage.getItem('userId'),
+        ]);
+        setInitialRoute(remembered === 'true' && token && userId ? 'Home' : 'Start');
+      } catch (e) {
+        setInitialRoute('Start');
+      }
+    };
+    checkRememberedUser();
+  }, []);
 
   const MyTheme = {
     ...DefaultTheme,
@@ -34,12 +52,22 @@ function AppNavigator() {
     },
   };
 
+  if (!initialRoute) {
+    return (
+      <SafeAreaProvider>
+        <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={colors.accent} />
+        </View>
+      </SafeAreaProvider>
+    );
+  }
+
   return (
     <SafeAreaProvider>
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         <NavigationContainer theme={MyTheme}>
-          <Stack.Navigator 
-            initialRouteName="Start"
+          <Stack.Navigator
+            initialRouteName={initialRoute}
             screenOptions={{ 
               headerShown: false,
               contentStyle: { backgroundColor: 'transparent' } 

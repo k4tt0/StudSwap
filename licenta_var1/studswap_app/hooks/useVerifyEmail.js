@@ -19,7 +19,7 @@ export const useVerifyEmail = (navigation) => {
       const data = await response.json();
 
       if (data && data.emailVerified === true) {
-        navigation.navigate('Home');
+        navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
         return { type: 'success', title: 'Success!', message: 'Your email is verified. Welcome to StudSwap!' };
       } else {
         return {

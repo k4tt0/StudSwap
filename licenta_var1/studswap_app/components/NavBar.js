@@ -3,7 +3,7 @@ import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import * as ImagePicker from 'expo-image-picker';
-import { useUnreadBadge } from '../hooks/useUnreadBadge'; 
+import { useUnreadBadge } from '../hooks/useUnreadBadge';
 
 export default function NavBar({ navigation, activeScreen }) {
   const { colors } = useTheme();
@@ -43,9 +43,9 @@ export default function NavBar({ navigation, activeScreen }) {
               const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
               if (status !== 'granted') return alert('Need camera roll permissions!');
               let result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsMultipleSelection: true, selectionLimit: 5, quality: 0.7 });
-              if (!result.canceled) navigation.navigate('CreateListing', { initialImages: result.assets.map(a => a.uri) }); 
+              if (!result.canceled) navigation.navigate('CreateListing', { initialImages: result.assets.map(a => a.uri) });
             } catch (error) {}
-          }} 
+          }}
         >
           <MaterialCommunityIcons name="plus" size={32} color="#FFF" style={styles.fabIcon} />
         </TouchableOpacity>

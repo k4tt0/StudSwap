@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_BASE_URL } from '../firebaseConfig'; 
+import { API_BASE_URL } from '../firebaseConfig';
 
 export const useCreateListing = (navigation, initialImages = []) => {
   const [images, setImages] = useState(initialImages);
@@ -30,7 +30,7 @@ export const useCreateListing = (navigation, initialImages = []) => {
     }
 
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['image'], 
+      mediaTypes: ['image'],
       allowsMultipleSelection: true,
       selectionLimit: remainingSlots,
       quality: 0.7,

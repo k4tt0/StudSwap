@@ -41,7 +41,7 @@ export const useLogin = (navigation) => {
           await AsyncStorage.removeItem('rememberUser');
         }
 
-        navigation.navigate('Home');
+        navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
         return { type: 'success' };
       }
 

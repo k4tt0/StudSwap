@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, FlatList, TouchableOpacity, TextInput, Image, Modal, RefreshControl } from 'react-native';
+import React, { useState, useCallback, useRef } from 'react';
+import { View, Text, ScrollView, FlatList, TouchableOpacity, TextInput, Image, Modal, RefreshControl, BackHandler, ToastAndroid, Platform } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { getHomeStyles } from '../styles/HomeScreenStyle';
-import { useTheme } from '../context/ThemeContext'; 
+import { useTheme } from '../context/ThemeContext';
 import NavBar from '../components/NavBar';
 import { useHomeListings } from '../hooks/useHomeListings';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -36,6 +37,28 @@ export default function HomeScreen({ navigation }) {
   } = useHomeListings();
 
   const [isFilterVisible, setIsFilterVisible] = useState(false);
+
+  const readyToExit = useRef(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (readyToExit.current) {
+          BackHandler.exitApp();
+          return true;
+        }
+        readyToExit.current = true;
+        if (Platform.OS === 'android') {
+          ToastAndroid.show('Press back again to exit', ToastAndroid.SHORT);
+        }
+        setTimeout(() => { readyToExit.current = false; }, 2000);
+        return true;
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [])
+  );
 
   const getTypeTag = (type) => {
     switch (type) {
