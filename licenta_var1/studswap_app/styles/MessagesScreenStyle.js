@@ -87,7 +87,6 @@ export const getMessagesStyles = (colors) => StyleSheet.create({
   },
   emptyContainer: {
     flex: 1,
-    width: width,
     justifyContent: 'center',
     alignItems: 'center',
     paddingTop: 100,
@@ -96,5 +95,6 @@ export const getMessagesStyles = (colors) => StyleSheet.create({
     marginTop: 12,
     color: colors.muted,
     fontSize: 15,
+    textAlign: 'center',
   }
 });
