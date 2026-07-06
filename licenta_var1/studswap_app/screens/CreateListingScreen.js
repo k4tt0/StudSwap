@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Image, FlatList, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,6 +7,7 @@ import { useCreateListing } from '../hooks/useCreateListing';
 import { getCreateListingStyles } from '../styles/CreateListingStyle';
 import PillSelector from '../components/PillSelector';
 import InfoModal from '../components/InfoModal';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function CreateListingScreen({ navigation, route }) {
   const { colors } = useTheme();
@@ -16,7 +17,7 @@ export default function CreateListingScreen({ navigation, route }) {
   const initialImages = route.params?.initialImages || [];
 
   const {
-    images, handleAddMoreImages, removeImage,
+    images, handleAddMoreImages, removeImage, moveImage,
     title, setTitle, description, setDescription,
     category, setCategory, categories,
     announcementType, setAnnouncementType, announcementTypes,
@@ -27,6 +28,47 @@ export default function CreateListingScreen({ navigation, route }) {
   const [infoVisible, setInfoVisible] = useState(false);
   const [infoConfig, setInfoConfig] = useState({ title: '', message: '' });
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
+  const [exitVisible, setExitVisible] = useState(false);
+  const [pendingExitAction, setPendingExitAction] = useState(null);
+  const [justPublished, setJustPublished] = useState(false);
+
+  // true if the user has entered anything worth losing
+  const hasUnsavedChanges =
+    images.length > 0 ||
+    title.trim() !== '' ||
+    description.trim() !== '' ||
+    category !== '' ||
+    announcementType !== '' ||
+    price.trim() !== '' ||
+    condition !== '';
+
+  // intercept back gesture / hardware back / swipe-to-dismiss
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      // allow leaving when nothing was filled in, while publishing, or right after a successful publish
+      if (!hasUnsavedChanges || loading || justPublished) return;
+
+      e.preventDefault();
+      setPendingExitAction(e.data.action);
+      setExitVisible(true);
+    });
+
+    return unsubscribe;
+  }, [navigation, hasUnsavedChanges, loading, justPublished]);
+
+  const confirmExit = useCallback(() => {
+    setExitVisible(false);
+    if (pendingExitAction) {
+      navigation.dispatch(pendingExitAction);
+    } else {
+      navigation.goBack();
+    }
+  }, [navigation, pendingExitAction]);
+
+  const cancelExit = () => {
+    setPendingExitAction(null);
+    setExitVisible(false);
+  };
 
   const errors = attemptedSubmit ? validate() : {};
 
@@ -44,7 +86,12 @@ export default function CreateListingScreen({ navigation, route }) {
   const onPublishPress = async () => {
     setAttemptedSubmit(true);
     if (Object.keys(validate()).length > 0) return;
+    setJustPublished(true);
     const result = await handlePublish();
+    if (result && result.type !== 'success') {
+      // publish failed — re-arm the exit guard so changes stay protected
+      setJustPublished(false);
+    }
     showInfo(result);
   };
 
@@ -100,6 +147,29 @@ export default function CreateListingScreen({ navigation, route }) {
                     <TouchableOpacity style={styles.removeIcon} onPress={() => removeImage(index)}>
                       <Ionicons name="close" size={20} color="#FFFFFF" />
                     </TouchableOpacity>
+
+                    {index === 0 && (
+                      <View style={styles.coverBadge}>
+                        <Text style={styles.coverBadgeText}>Cover</Text>
+                      </View>
+                    )}
+
+                    <View style={styles.reorderBar}>
+                      <TouchableOpacity
+                        style={[styles.reorderBtn, index === 0 && styles.reorderBtnDisabled]}
+                        disabled={index === 0}
+                        onPress={() => moveImage(index, index - 1)}
+                      >
+                        <Ionicons name="chevron-back" size={18} color="#FFFFFF" />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.reorderBtn, index === images.length - 1 && styles.reorderBtnDisabled]}
+                        disabled={index === images.length - 1}
+                        onPress={() => moveImage(index, index + 1)}
+                      >
+                        <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 );
               }}
@@ -199,6 +269,17 @@ export default function CreateListingScreen({ navigation, route }) {
         message={infoConfig.message}
         colors={colors}
         onClose={() => setInfoVisible(false)}
+      />
+
+      <ConfirmModal
+        visible={exitVisible}
+        title="Discard listing?"
+        message="You have unsaved changes. If you leave now, this listing and its photos will be lost."
+        confirmText="Discard"
+        cancelText="Keep editing"
+        colors={colors}
+        onConfirm={confirmExit}
+        onCancel={cancelExit}
       />
     </View>
   );

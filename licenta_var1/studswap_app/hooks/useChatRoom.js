@@ -125,8 +125,40 @@ export const useChatRoom = (chatId, listingId, otherUserId) => {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: false, quality: 0.6 });
-    if (!result.canceled && result.assets) {
-      sendMessage(result.assets[0].uri); 
+    if (result.canceled || !result.assets) return;
+
+    const localUri = result.assets[0].uri;
+
+    try {
+      const formData = new FormData();
+      const filename = localUri.split('/').pop();
+      const match = /\.(\w+)$/.exec(filename);
+      const fileType = match ? `image/${match[1]}` : `image`;
+
+      formData.append('images', {
+        uri: localUri,
+        name: filename,
+        type: fileType,
+      });
+
+      const uploadResponse = await fetch(`${API_BASE_URL}/api/upload`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'multipart/form-data' },
+        body: formData,
+      });
+
+      if (!uploadResponse.ok) throw new Error('Upload failed');
+
+      const uploadData = await uploadResponse.json();
+      const imageUrl = uploadData.imageUrls && uploadData.imageUrls[0];
+
+      if (!imageUrl) throw new Error('No image URL returned');
+
+      // send the public Cloudinary URL as the message
+      sendMessage(imageUrl);
+    } catch (error) {
+      console.error('Chat image upload error:', error);
+      return { type: 'error', title: 'Upload Failed', message: 'Could not send the image. Please try again.' };
     }
   };
 

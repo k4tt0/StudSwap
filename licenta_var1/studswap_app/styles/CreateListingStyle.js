@@ -112,6 +112,41 @@ export const getCreateListingStyles = (colors) => StyleSheet.create({
     fontWeight: '700' 
   },
 
+  reorderBar: {
+    position: 'absolute',
+    bottom: 5,
+    left: 0,
+    right: 15,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 5,
+  },
+  reorderBtn: {
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 15,
+    width: 30,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  reorderBtnDisabled: {
+    opacity: 0.25,
+  },
+  coverBadge: {
+    position: 'absolute',
+    top: 5,
+    left: 5,
+    backgroundColor: colors.accent,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  coverBadgeText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',

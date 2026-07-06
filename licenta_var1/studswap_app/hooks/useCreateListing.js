@@ -51,6 +51,16 @@ export const useCreateListing = (navigation, initialImages = []) => {
     setImages(prev => prev.filter((_, index) => index !== indexToRemove));
   };
 
+  const moveImage = (fromIndex, toIndex) => {
+    setImages(prev => {
+      if (toIndex < 0 || toIndex >= prev.length) return prev;
+      const updated = [...prev];
+      const [moved] = updated.splice(fromIndex, 1);
+      updated.splice(toIndex, 0, moved);
+      return updated;
+    });
+  };
+
   const validate = () => {
     const errors = {};
     if (images.length === 0) errors.images = 'Please add at least one image.';
@@ -133,7 +143,7 @@ export const useCreateListing = (navigation, initialImages = []) => {
   };
 
   return {
-    images, handleAddMoreImages, removeImage,
+    images, handleAddMoreImages, removeImage, moveImage,
     title, setTitle,
     description, setDescription,
     category, setCategory, categories,
