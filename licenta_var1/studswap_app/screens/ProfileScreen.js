@@ -65,7 +65,10 @@ export default function ProfileScreen({ route, navigation }) {
 
         <Text style={styles.nameText}>{userProfile.name}</Text>
         <Text style={styles.locationText}>
-          {userProfile.city}  •  {userProfile.university}
+          {userProfile.city}
+        </Text>
+        <Text style={styles.locationText}>
+          {userProfile.university}
         </Text>
       </View>
 

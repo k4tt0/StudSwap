@@ -92,11 +92,15 @@ export const getProfileStyles = (colors) => StyleSheet.create({
     fontWeight: 'bold',
     color: colors.textDark,
     marginBottom: 4,
+    textAlign: 'center',
   },
   locationText: {
-    fontSize: 15,
+    fontSize: 13,
     color: colors.muted,
     fontWeight: '500',
+    textAlign: 'center',
+    lineHeight: 18,
+    paddingHorizontal: 20,
   },
   listingsHeading: {
     fontSize: 18,
